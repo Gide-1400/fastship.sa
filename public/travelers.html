@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المسافرون - الشحنة السريعة</title>
+    <meta name="description" content="ابحث عن مسافرين متاحين لنقل شحنتك بأمان وكفاءة">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    
+    <!-- Leaflet for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Tajawal', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #ed8936, #1a365d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .traveler-card {
+            transition: all 0.3s ease;
+        }
+        
+        .traveler-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        
+        .filter-checkbox:checked + label {
+            background-color: #ed8936;
+            color: white;
+        }
+        
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .rtl {
+            direction: rtl;
+        }
+        
+        .ltr {
+            direction: ltr;
+        }
+        
+        .search-input {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="rtl">
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold gradient-text">الشحنة السريعة</h1>
+                    </div>
+                </div>
+                
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4 space-x-reverse">
+                        <a href="index.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الرئيسية</a>
+                        <a href="travelers.html" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600">المسافرون</a>
+                        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة التحكم</a>
+                        <a href="support.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الدعم</a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <button class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        تسجيل الدخول
+                    </button>
+                    <button class="hidden md:block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        إنشاء حساب
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="pt-24 pb-12 bg-gradient-to-br from-blue-600 to-purple-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-white mb-12">
+                <h1 class="text-4xl lg:text-5xl font-bold mb-4">ابحث عن المسافرين</h1>
+                <p class="text-xl text-blue-100">جد المسافر المناسب لشحنتك من آلاف المسافرين الموثوقين</p>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="max-w-3xl mx-auto">
+                <div class="search-input rounded-2xl p-6 shadow-2xl">
+                    <div class="flex flex-col md:flex-row gap-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">البحث عن مسافر</label>
+                            <input type="text" id="search-input" placeholder="ابحث بالاسم، المدينة، أو نوع المركبة..." 
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div class="flex items-end">
+                            <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                                بحث
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <section class="py-12 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <!-- Filters Sidebar -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-2xl p-6 shadow-lg sticky top-24">
+                        <h3 class="text-lg font-bold text-gray-800 mb-6">فلترة النتائج</h3>
+                        
+                        <!-- Transport Type Filter -->
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-gray-700 mb-3">نوع المركبة</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="car" value="سيارة" class="filter-checkbox hidden">
+                                    <label for="car" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer text-sm transition-colors">
+                                        سيارة
+                                    </label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="truck" value="شاحنة" class="filter-checkbox hidden">
+                                    <label for="truck" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer text-sm transition-colors">
+                                        شاحنة
+                                    </label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="van" value="فان" class="filter-checkbox hidden">
+                                    <label for="van" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer text-sm transition-colors">
+                                        فان
+                                    </label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="bus" value="باص" class="filter-checkbox hidden">
+                                    <label for="bus" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer text-sm transition-colors">
+                                        باص
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Price Range Filter -->
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-gray-700 mb-3">نطاق السعر</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="radio" id="price-all" name="price" value="all" checked class="ml-2">
+                                    <label for="price-all" class="text-sm">الكل</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="price-low" name="price" value="low" class="ml-2">
+                                    <label for="price-low" class="text-sm">أقل من 1 ريال/كجم</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="price-medium" name="price" value="medium" class="ml-2">
+                                    <label for="price-medium" class="text-sm">1-2 ريال/كجم</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="price-high" name="price" value="high" class="ml-2">
+                                    <label for="price-high" class="text-sm">أكثر من 2 ريال/كجم</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Rating Filter -->
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-gray-700 mb-3">التقييم</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="radio" id="rating-all" name="rating" value="all" checked class="ml-2">
+                                    <label for="rating-all" class="text-sm">الكل</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="rating-4" name="rating" value="4" class="ml-2">
+                                    <label for="rating-4" class="text-sm">4 نجوم فما فوق</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="radio" id="rating-45" name="rating" value="4.5" class="ml-2">
+                                    <label for="rating-45" class="text-sm">4.5 نجوم فما فوق</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Availability Filter -->
+                        <div class="mb-6">
+                            <h4 class="font-semibold text-gray-700 mb-3">الحالة</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="available" value="available" class="filter-checkbox hidden">
+                                    <label for="available" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg cursor-pointer text-sm transition-colors">
+                                        متاح الآن
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg font-semibold transition-colors">
+                            إعادة تعيين
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Results Section -->
+                <div class="lg:col-span-3">
+                    <!-- Sort and View Options -->
+                    <div class="bg-white rounded-2xl p-4 shadow-lg mb-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                            <div class="flex items-center gap-4">
+                                <span class="text-sm font-medium text-gray-700">الترتيب حسب:</span>
+                                <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="rating">أعلى تقييم</option>
+                                    <option value="price-low">أقل سعر</option>
+                                    <option value="price-high">أعلى سعر</option>
+                                    <option value="distance">أقرب مسافة</option>
+                                    <option value="time">أقرب موعد</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm text-gray-600">تم العثور على</span>
+                                <span class="font-bold text-blue-600">24</span>
+                                <span class="text-sm text-gray-600">مسافر</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Map View -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg mb-8">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">خريطة المسافرين</h3>
+                        <div id="map-container" class="map-container"></div>
+                    </div>
+                    
+                    <!-- Travelers Grid -->
+                    <div id="travelers-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Traveler Card 1 -->
+                        <div class="traveler-card bg-white rounded-2xl p-6 shadow-lg">
+                            <div class="flex items-center mb-4">
+                                <img src="https://kimi-web-img.moonshot.cn/img/www.dropoff.com/55cca0b187c44c02ad7d55fdd54a23b1061a7806.jpeg" alt="خالد السيد" class="w-16 h-16 rounded-full object-cover ml-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-gray-800">خالد السيد</h3>
+                                    <div class="flex items-center mb-1">
+                                        <span class="text-yellow-500 ml-1">★</span>
+                                        <span class="text-sm text-gray-600">4.8</span>
+                                        <span class="text-sm text-gray-500 mx-2">•</span>
+                                        <span class="text-sm text-gray-500">156 تقييم</span>
+                                    </div>
+                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">سيارة</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">🚗</span>
+                                    <span class="text-sm text-gray-700">تويوتا كامري 2020</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">📍</span>
+                                    <span class="text-sm text-gray-700">الرياض → جدة</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">⏰</span>
+                                    <span class="text-sm text-gray-700">غداً 14:00</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-gray-600 text-sm ml-2">💰</span>
+                                    <span class="text-sm font-bold text-green-600">0.8 ريال/كجم</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold transition-colors">
+                                    اختيار المسافر
+                                </button>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                                    👁️
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Traveler Card 2 -->
+                        <div class="traveler-card bg-white rounded-2xl p-6 shadow-lg">
+                            <div class="flex items-center mb-4">
+                                <img src="https://kimi-web-img.moonshot.cn/img/www.logos3pl.com/5d00aff09838f481e5de19381115e8d8e0e18878.jpg" alt="محمد أحمد" class="w-16 h-16 rounded-full object-cover ml-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-gray-800">محمد أحمد</h3>
+                                    <div class="flex items-center mb-1">
+                                        <span class="text-yellow-500 ml-1">★</span>
+                                        <span class="text-sm text-gray-600">4.6</span>
+                                        <span class="text-sm text-gray-500 mx-2">•</span>
+                                        <span class="text-sm text-gray-500">89 تقييم</span>
+                                    </div>
+                                    <span class="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">شاحنة صغيرة</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">🚗</span>
+                                    <span class="text-sm text-gray-700">فورد ترانزيت 2019</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">📍</span>
+                                    <span class="text-sm text-gray-700">جدة → الدمام</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">⏰</span>
+                                    <span class="text-sm text-gray-700">بعد غد 09:00</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-gray-600 text-sm ml-2">💰</span>
+                                    <span class="text-sm font-bold text-green-600">1.2 ريال/كجم</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold transition-colors">
+                                    اختيار المسافر
+                                </button>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                                    👁️
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Traveler Card 3 -->
+                        <div class="traveler-card bg-white rounded-2xl p-6 shadow-lg">
+                            <div class="flex items-center mb-4">
+                                <img src="https://kimi-web-img.moonshot.cn/img/citydelivery.com.vn/91e8f1c59ea323b3451428d49d42e5175d177b1b.jpg" alt="فاطمة الزهراني" class="w-16 h-16 rounded-full object-cover ml-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-gray-800">فاطمة الزهراني</h3>
+                                    <div class="flex items-center mb-1">
+                                        <span class="text-yellow-500 ml-1">★</span>
+                                        <span class="text-sm text-gray-600">4.9</span>
+                                        <span class="text-sm text-gray-500 mx-2">•</span>
+                                        <span class="text-sm text-gray-500">203 تقييم</span>
+                                    </div>
+                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">سيارة</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">🚗</span>
+                                    <span class="text-sm text-gray-700">هيونداي هونشي 2021</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">📍</span>
+                                    <span class="text-sm text-gray-700">مكة → المدينة</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">⏰</span>
+                                    <span class="text-sm text-gray-700">غداً 18:00</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-gray-600 text-sm ml-2">💰</span>
+                                    <span class="text-sm font-bold text-green-600">0.9 ريال/كجم</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold transition-colors">
+                                    اختيار المسافر
+                                </button>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                                    👁️
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Traveler Card 4 -->
+                        <div class="traveler-card bg-white rounded-2xl p-6 shadow-lg">
+                            <div class="flex items-center mb-4">
+                                <img src="https://kimi-web-img.moonshot.cn/img/media.istockphoto.com/04dc512f136ba384803bf3a0bc2e3634f672862b.jpg" alt="عبدالله الراشد" class="w-16 h-16 rounded-full object-cover ml-4">
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-bold text-gray-800">عبدالله الراشد</h3>
+                                    <div class="flex items-center mb-1">
+                                        <span class="text-yellow-500 ml-1">★</span>
+                                        <span class="text-sm text-gray-600">4.7</span>
+                                        <span class="text-sm text-gray-500 mx-2">•</span>
+                                        <span class="text-sm text-gray-500">134 تقييم</span>
+                                    </div>
+                                    <span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">فان</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">🚗</span>
+                                    <span class="text-sm text-gray-700">مرسيدس فان 2022</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">📍</span>
+                                    <span class="text-sm text-gray-700">الدمام → الرياض</span>
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <span class="text-gray-600 text-sm ml-2">⏰</span>
+                                    <span class="text-sm text-gray-700">اليوم 20:00</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-gray-600 text-sm ml-2">💰</span>
+                                    <span class="text-sm font-bold text-green-600">1.1 ريال/كجم</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button class="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg font-semibold transition-colors">
+                                    اختيار المسافر
+                                </button>
+                                <button class="bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 px-4 rounded-lg transition-colors">
+                                    👁️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Load More Button -->
+                    <div class="text-center mt-12">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-colors">
+                            عرض المزيد من المسافرين
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold gradient-text mb-4">الشحنة السريعة</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        منصة إلكترونية تربط بين أصحاب الشحنات والمسافرين لاستغلال الحمولة الفارغة وتسهيل نقل الشحنات داخل المملكة وخارجها.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">الرئيسية</a></li>
+                        <li><a href="travelers.html" class="text-gray-400 hover:text-white transition-colors">المسافرون</a></li>
+                        <li><a href="dashboard.html" class="text-gray-400 hover:text-white transition-colors">لوحة التحكم</a></li>
+                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الدعم الفني</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">المساعدة</h4>
+                    <ul class="space-y-2">
+                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الأسئلة الشائعة</a></li>
+                        <li><a href="terms.html" class="text-gray-400 hover:text-white transition-colors">الشروط والأحكام</a></li>
+                        <li><a href="privacy.html" class="text-gray-400 hover:text-white transition-colors">سياسة الخصوصية</a></li>
+                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">معلومات التواصل</h4>
+                    <div class="space-y-2 text-gray-400">
+                        <p>📧 gide1979@gmail.com</p>
+                        <p>📞 +966551519723</p>
+                        <p>📍 المملكة العربية السعودية</p>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-400">
+                            صاحب الفكرة: قايد صالح المصعبي
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2024 الشحنة السريعة. جميع الحقوق محفوظة | قايد صالح المصعبي
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+<script src="auth.js"></script>
+<script src="main.js"></script>
+    
+    <script>
+        // Initialize map when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize map
+            const map = L.map('map-container').setView([24.7136, 46.6753], 6);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Add markers for travelers
+            const travelers = [
+                { name: 'خالد السيد', lat: 24.7136, lng: 46.6753, route: 'الرياض → جدة' },
+                { name: 'محمد أحمد', lat: 21.4858, lng: 39.1925, route: 'جدة → الدمام' },
+                { name: 'فاطمة الزهراني', lat: 21.4225, lng: 39.8262, route: 'مكة → المدينة' },
+                { name: 'عبدالله الراشد', lat: 26.3993, lng: 50.1137, route: 'الدمام → الرياض' }
+            ];
+
+            travelers.forEach(traveler => {
+                L.marker([traveler.lat, traveler.lng])
+                    .addTo(map)
+                    .bindPopup(`<b>${traveler.name}</b><br>${traveler.route}`);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سياسة الخصوصية - الشحنة السريعة</title>
+    <meta name="description" content="سياسة الخصوصية الكاملة لمنصة الشحنة السريعة وكيفية حماية بياناتك">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Tajawal', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #ed8936, #1a365d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .rtl {
+            direction: rtl;
+        }
+        
+        .ltr {
+            direction: ltr;
+        }
+        
+        .privacy-content {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+        }
+        
+        .section-number {
+            background: linear-gradient(45deg, #ed8936, #1a365d);
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+        
+        .data-type {
+            transition: all 0.3s ease;
+        }
+        
+        .data-type:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="rtl">
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <h1 class="text-2xl font-bold gradient-text">الشحنة السريعة</h1>
+                    </div>
+                </div>
+                
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4 space-x-reverse">
+                        <a href="index.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الرئيسية</a>
+                        <a href="travelers.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">المسافرون</a>
+                        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة التحكم</a>
+                        <a href="support.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الدعم الفني</a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <button class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors">
+                        تسجيل الدخول
+                    </button>
+                    <button class="hidden md:block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        إنشاء حساب
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Section -->
+    <section class="pt-24 pb-12 bg-gradient-to-br from-blue-600 to-purple-700">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-white">
+                <h1 class="text-4xl lg:text-5xl font-bold mb-4">سياسة الخصوصية</h1>
+                <p class="text-xl text-blue-100">آخر تحديث: أكتوبر 2024</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Privacy Content -->
+    <section class="py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="privacy-content rounded-2xl p-8 shadow-2xl">
+                <div class="mb-8 text-center">
+                    <p class="text-lg text-gray-600 leading-relaxed">
+                        في منصة الشحنة السريعة، نحن ملتزمون بحماية خصوصية بياناتك الشخصية وتأمينها. 
+                        توضح هذه السياسة كيفية جمعنا واستخدامنا وحماية معلوماتك.
+                    </p>
+                </div>
+
+                <!-- Introduction -->
+                <div class="mb-12 bg-blue-50 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-blue-800 mb-4">مقدمة</h3>
+                    <p class="text-blue-700 leading-relaxed">
+                        نحن ندرك أهمية خصوصية بياناتك الشخصية، ونلتزم بحمايتها وفقاً لأفضل الممارسات العالمية 
+                        ولائحة حماية البيانات الشخصية في المملكة العربية السعودية. هذه السياسة توضح:
+                    </p>
+                    <ul class="list-disc list-inside mt-4 space-y-2 text-blue-700">
+                        <li>ما هي البيانات التي نجمعها ولماذا</li>
+                        <li>كيف نستخدم هذه البيانات</li>
+                        <li>كيف نحمي بياناتك</li>
+                        <li>ما هي حقوقك فيما يتعلق ببياناتك</li>
+                        <li>كيفية الاتصال بنا بخصوص الخصوصية</li>
+                    </ul>
+                </div>
+
+                <!-- Section 1 -->
+                <div id="section-1" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">1</div>
+                        <h2 class="text-2xl font-bold text-gray-800">البيانات التي نجمعها</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="data-type bg-white border border-gray-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center ml-4">
+                                    <span class="text-2xl">👤</span>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">البيانات الشخصية</h4>
+                            </div>
+                            <ul class="text-sm text-gray-600 space-y-2">
+                                <li>• الاسم الكامل</li>
+                                <li>• رقم الهوية/الإقامة</li>
+                                <li>• رقم الجوال</li>
+                                <li>• البريد الإلكتروني</li>
+                                <li>• العنوان</li>
+                                <li>• الصورة الشخصية</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="data-type bg-white border border-gray-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center ml-4">
+                                    <span class="text-2xl">📦</span>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">بيانات الشحنات</h4>
+                            </div>
+                            <ul class="text-sm text-gray-600 space-y-2">
+                                <li>• نوع الشحنة</li>
+                                <li>• الوزن والأبعاد</li>
+                                <li>• المواقع (من/إلى)</li>
+                                <li>• قيمة الشحنة</li>
+                                <li>• صور الشحنة</li>
+                                <li>• مواعيد التوصيل</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="data-type bg-white border border-gray-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center ml-4">
+                                    <span class="text-2xl">🚗</span>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">بيانات المسافرين</h4>
+                            </div>
+                            <ul class="text-sm text-gray-600 space-y-2">
+                                <li>• رخصة القيادة</li>
+                                <li>• استمارة المركبة</li>
+                                <li>• صورة المركبة</li>
+                                <li>• تفضيلات السفر</li>
+                                <li>• التقييمات والمراجعات</li>
+                                <li>• سجل الرحلات</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="data-type bg-white border border-gray-200 rounded-lg p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center ml-4">
+                                    <span class="text-2xl">📱</span>
+                                </div>
+                                <h4 class="text-lg font-semibold text-gray-800">بيانات التقنية</h4>
+                            </div>
+                            <ul class="text-sm text-gray-600 space-y-2">
+                                <li>• عنوان IP</li>
+                                <li>• نوع الجهاز والمتصفح</li>
+                                <li>• الموقع الجغرافي</li>
+                                <li>• سجل الزيارات</li>
+                                <li>• ملفات تعريف الارتباط</li>
+                                <li>• بيانات الاستخدام</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2 -->
+                <div id="section-2" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">2</div>
+                        <h2 class="text-2xl font-bold text-gray-800">كيف نجمع البيانات</h2>
+                    </div>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p><strong>مباشرة منك:</strong> عند التسجيل، ملء النماذج، أو التواصل معنا.</p>
+                        <p><strong>تلقائياً:</strong> من خلال استخدامك للمنصة وتقنيات التتبع.</p>
+                        <p><strong>من أطراف ثالثة:</strong> مثل شركات التحقق من الهوية، خدمات الدفع.</p>
+                        <p><strong>عبر وسائل التواصل:</strong> عند التواصل عبر الهاتف، البريد، أو وسائل التواصل الاجتماعي.</p>
+                    </div>
+                </div>
+
+                <!-- Section 3 -->
+                <div id="section-3" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">3</div>
+                        <h2 class="text-2xl font-bold text-gray-800">كيف نستخدم البيانات</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800 mb-2">تقديم الخدمات</h4>
+                            <ul class="text-sm text-blue-700 space-y-1">
+                                <li>• إنشاء وإدارة الحسابات</li>
+                                <li>• تسهيل عمليات النقل</li>
+                                <li>• معاللة المدفوعات</li>
+                                <li>• تتبع الشحنات</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-green-800 mb-2">تحسين التجربة</h4>
+                            <ul class="text-sm text-green-700 space-y-1">
+                                <li>• تخصيص المحتوى</li>
+                                <li>• تحسين الأداء</li>
+                                <li>• تطوير الميزات الجديدة</li>
+                                <li>• تحليل الاستخدام</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-orange-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-orange-800 mb-2">التواصل</h4>
+                            <ul class="text-sm text-orange-700 space-y-1">
+                                <li>• إشعارات الخدمة</li>
+                                <li>• تحديثات الحالة</li>
+                                <li>• الدعم الفني</li>
+                                <li>• الرسائل التسويقية (بإذنك)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-red-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-red-800 mb-2">الأمان والامتثال</h4>
+                            <ul class="text-sm text-red-700 space-y-1">
+                                <li>• منع الاحتيال</li>
+                                <li>• التحقق من الهوية</li>
+                                <li>• الامتثال القانوني</li>
+                                <li>• حل النزاعات</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4 -->
+                <div id="section-4" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">4</div>
+                        <h2 class="text-2xl font-bold text-gray-800">مشاركة البيانات</h2>
+                    </div>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p><strong>لا نشارك بياناتك مع:</strong></p>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>أطراف ثالثة للتسويق دون إذن صريح</li>
+                            <li>شركات غير مرتبطة بالخدمة</li>
+                            <li>أي شخص خارج نطاق الضرورة</li>
+                        </ul>
+                        
+                        <p class="mt-4"><strong>نحن نشارك البيانات مع:</strong></p>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>المسافرين (لإتمام عملية النقل)</li>
+                            <li>مقدمي خدمات الدفع</li>
+                            <li>شركات التحقق من الهوية</li>
+                            <li>مقدمي خدمات الدعم الفني</li>
+                            <li>الجهات القانونية عند الضرورة</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 5 -->
+                <div id="section-5" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">5</div>
+                        <h2 class="text-2xl font-bold text-gray-800">حماية البيانات</h2>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="bg-green-50 rounded-lg p-6">
+                            <h4 class="font-semibold text-green-800 mb-4">إجراءات الأمان</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-green-700">
+                                <ul class="space-y-2">
+                                    <li>• التشفير (SSL/TLS)</li>
+                                    <li>• جدران الحماية</li>
+                                    <li>• التحقق المزدوج</li>
+                                    <li>• النسخ الاحتياطي المشفر</li>
+                                </ul>
+                                <ul class="space-y-2">
+                                    <li>• الوصول المحدود</li>
+                                    <li>• مراقبة مستمرة</li>
+                                    <li>• تحديثات أمنية منتظمة</li>
+                                    <li>• تدريب الموظفين</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 rounded-lg p-6">
+                            <h4 class="font-semibold text-yellow-800 mb-4">نصائح الأمان</h4>
+                            <ul class="list-disc list-inside space-y-2 text-yellow-700">
+                                <li>احفظ كلمة المرور الخاصة بك بسرية</li>
+                                <li>لا تشارك حسابك مع أي شخص</li>
+                                <li>افحص دائماً روابط التحقق</li>
+                                <li>أبلغنا فوراً عن أي نشاط مشبوه</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 6 -->
+                <div id="section-6" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">6</div>
+                        <h2 class="text-2xl font-bold text-gray-800">حقوقك</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-blue-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-800 mb-2">حق الوصول</h4>
+                            <p class="text-sm text-blue-700">يمكنك طلب نسخة من بياناتك الشخصية في أي وقت.</p>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-green-800 mb-2">حق التصحيح</h4>
+                            <p class="text-sm text-green-700">يمكنك تعديل بياناتك غير الدقيقة أو غير الكاملة.</p>
+                        </div>
+                        
+                        <div class="bg-orange-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-orange-800 mb-2">حق الحذف</h4>
+                            <p class="text-sm text-orange-700">يمكنك طلب حذف بياناتك في بعض الحالات.</p>
+                        </div>
+                        
+                        <div class="bg-purple-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-purple-800 mb-2">حق النقل</h4>
+                            <p class="text-sm text-purple-700">يمكنك نقل بياناتك إلى مزود خدمة آخر.</p>
+                        </div>
+                        
+                        <div class="bg-red-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-red-800 mb-2">حق الاعتراض</h4>
+                            <p class="text-sm text-red-700">يمكنك الاعتراض على معالجة بياناتك في بعض الحالات.</p>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-2">حق الشكوى</h4>
+                            <p class="text-sm text-gray-700">يمكنك تقديم شكوى للجهة المختصة.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 7 -->
+                <div id="section-7" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">7</div>
+                        <h2 class="text-2xl font-bold text-gray-800">الاحتفاظ بالبيانات</h2>
+                    </div>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p><strong>فترة الاحتفاظ:</strong></p>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>بيانات الحساب: 5 سنوات بعد إغلاق الحساب</li>
+                            <li>سجل المعاملات: 10 سنوات (للأغراض القانونية)</li>
+                            <li>بيانات الشحنات: 3 سنوات بعد إتمام الخدمة</li>
+                            <li>سجلات الأمان: 1 سنة</li>
+                        </ul>
+                        
+                        <p class="mt-4"><strong>حذف البيانات:</strong></p>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>يتم حذف البيانات بشكل آمن ودائم</li>
+                            <li>بعض البيانات قد تُحفظ للامتثال القانوني</li>
+                            <li>يمكنك طلب حذف بياناتك في أي وقت</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 8 -->
+                <div id="section-8" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">8</div>
+                        <h2 class="text-2xl font-bold text-gray-800">الملفات والتقنيات</h2>
+                    </div>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p><strong>ملفات تعريف الارتباط (Cookies):</strong></p>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>نستخدم ملفات تعريف الارتباط الضرورية لتشغيل المنصة</li>
+                            <li>ملفات تحليل الأداء لفهم كيفية استخدامك للمنصة</li>
+                            <li>ملفات تخصيص المحتوى لتجربة أفضل</li>
+                            <li>يمكنك رفض ملفات غير الضرورية من إعدادات المتصفح</li>
+                        </ul>
+                        
+                        <p class="mt-4"><strong>تقنيات أخرى:</strong></p>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>بكسل التتبع لفهم سلوك المستخدم</li>
+                            <li>تخزين محلي لتسريع الأداء</li>
+                            <li>تحليلات جوجل لفهم الاستخدام</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Section 9 -->
+                <div id="section-9" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">9</div>
+                        <h2 class="text-2xl font-bold text-gray-800">نقل البيانات الدولي</h2>
+                    </div>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p>9.1 - يتم تخزين البيانات في خوادم داخل المملكة العربية السعودية.</p>
+                        <p>9.2 - في حالات نادرة، قد تُنقل بعض البيانات إلى خارج المملكة مع حماية كاملة.</p>
+                        <p>9.3 - نضمن مستوى مناسب من الحماية عند النقل الدولي.</p>
+                        <p>9.4 - سنخطرك إذا تم نقل بياناتك إلى خارج المملكة.</p>
+                    </div>
+                </div>
+
+                <!-- Section 10 -->
+                <div id="section-10" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">10</div>
+                        <h2 class="text-2xl font-bold text-gray-800">حماية الأطفال</h2>
+                    </div>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p>10.1 - لا يجوز للأطفال under 18 استخدام المنصة دون موافقة الوالدين.</p>
+                        <p>10.2 - نحن لا نجمع عمداً بيانات من الأطفال.</p>
+                        <p>10.3 - إذا علمنا بوجود بيانات لأطفال، سنحذفها فوراً.</p>
+                        <p>10.4 - على الوالدين مراقبة استخدام أطفالهم للإنترنت.</p>
+                    </div>
+                </div>
+
+                <!-- Section 11 -->
+                <div id="section-11" class="mb-12">
+                    <div class="flex items-center mb-6">
+                        <div class="section-number ml-4">11</div>
+                        <h2 class="text-2xl font-bold text-gray-800">التغييرات في السياسة</h2>
+                    </div>
+                    <div class="space-y-4 text-gray-700 leading-relaxed">
+                        <p>11.1 - قد نقوم بتحديث هذه السياسة دورياً.</p>
+                        <p>11.2 - سيتم إشعارك بالتغييرات المهمة عبر البريد الإلكتروني.</p>
+                        <p>11.3 - التغييرات سارية بعد 7 أيام من الإشعار.</p>
+                        <p>11.4 - الاستمرار في الاستخدام يعني قبول التغييرات.</p>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="bg-gray-50 rounded-xl p-6 mt-12">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">معلومات التواصل</h3>
+                    <p class="text-gray-700 mb-4">
+                        إذا كان لديك أي أسئلة أو مخاوف بخصوص سياسة الخصوصية، يمكنك التواصل معنا:
+                    </p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p><strong>مسؤول حماية البيانات:</strong></p>
+                            <p>قايد صالح المصعبي</p>
+                            <p><strong>البريد الإلكتروني:</strong> gide1979@gmail.com</p>
+                        </div>
+                        <div>
+                            <p><strong>الهاتف:</strong> +966551519723</p>
+                            <p><strong>العنوان:</strong> المملكة العربية السعودية</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Agreement Confirmation -->
+                <div class="bg-green-50 rounded-xl p-6 mt-8 text-center">
+                    <p class="text-green-800 font-semibold mb-4">
+                        باستخدامك لمنصة الشحنة السريعة، فإنك توافق على جمع واستخدام بياناتك كما هو موضح في هذه السياسة.
+                    </p>
+                    <p class="text-sm text-green-600">
+                        تاريخ آخر تحديث: 1 أكتوبر 2024
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-2xl font-bold gradient-text mb-4">الشحنة السريعة</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        منصة إلكترونية تربط بين أصحاب الشحنات والمسافرين لاستغلال الحمولة الفارغة وتسهيل نقل الشحنات داخل المملكة وخارجها.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">الرئيسية</a></li>
+                        <li><a href="travelers.html" class="text-gray-400 hover:text-white transition-colors">المسافرون</a></li>
+                        <li><a href="dashboard.html" class="text-gray-400 hover:text-white transition-colors">لوحة التحكم</a></li>
+                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الدعم الفني</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">المساعدة</h4>
+                    <ul class="space-y-2">
+                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الأسئلة الشائعة</a></li>
+                        <li><a href="terms.html" class="text-gray-400 hover:text-white transition-colors">الشروط والأحكام</a></li>
+                        <li><a href="privacy.html" class="text-gray-400 hover:text-white transition-colors">سياسة الخصوصية</a></li>
+                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">اتصل بنا</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">معلومات التواصل</h4>
+                    <div class="space-y-2 text-gray-400">
+                        <p>📧 gide1979@gmail.com</p>
+                        <p>📞 +966551519723</p>
+                        <p>📍 المملكة العربية السعودية</p>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-400">
+                            صاحب الفكرة: قايد صالح المصعبي
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">
+                    © 2024 الشحنة السريعة. جميع الحقوق محفوظة | قايد صالح المصعبي
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Smooth Scrolling Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Smooth scrolling for anchor links
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+<!-- JavaScript -->
+<script src="auth.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

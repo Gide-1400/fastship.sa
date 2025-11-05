@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - الشحنة السريعة</title>
+    <meta name="description" content="تسجيل الدخول إلى حسابك في منصة الشحنة السريعة">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyChPGP2JICwH_IGs7BT-DDZH2LzuK7_L58",
+            authDomain: "fastship-2026.firebaseapp.com",
+            projectId: "fastship-2026",
+            storageBucket: "fastship-2026.firebasestorage.app",
+            messagingSenderId: "646769615933",
+            appId: "1:646769615933:web:5fd3c82c31969192f9f654"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        // جعل auth متاحاً globally
+        window.firebaseAuth = auth;
+        window.firebaseSignIn = signInWithEmailAndPassword;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Tajawal', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(45deg, #ed8936, #1a365d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        
+        .rtl {
+            direction: rtl;
+        }
+        
+        .ltr {
+            direction: ltr;
+        }
+    </style>
+</head>
+<body class="rtl">
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <a href="index.html" class="text-2xl font-bold gradient-text">الشحنة السريعة</a>
+                    </div>
+                </div>
+                
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4 space-x-reverse">
+                        <a href="index.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الرئيسية</a>
+                        <a href="travelers.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">المسافرون</a>
+                        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة التحكم</a>
+                        <a href="support.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الدعم الفني</a>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <a href="register.html" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        إنشاء حساب
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Section -->
+    <section class="min-h-screen flex items-center justify-center pt-16 pb-12">
+        <div class="max-w-md w-full mx-4">
+            <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-8 shadow-2xl card-hover">
+                <div class="text-center mb-8">
+                    <h1 class="text-3xl font-bold gradient-text mb-2">تسجيل الدخول</h1>
+                    <p class="text-gray-600">مرحباً بعودتك! سجل الدخول إلى حسابك</p>
+                </div>
+
+                <form id="loginForm" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
+                        <input type="email" id="email" name="email" required 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                               placeholder="أدخل بريدك الإلكتروني">
+                        <div id="email-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">كلمة المرور</label>
+                        <input type="password" id="password" name="password" required 
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                               placeholder="أدخل كلمة المرور">
+                        <div id="password-error" class="text-red-500 text-sm mt-1 hidden"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="remember" class="ml-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-sm text-gray-600">تذكرني</span>
+                        </label>
+                        <a href="forgot-password.html" class="text-sm text-blue-600 hover:text-blue-800">نسيت كلمة المرور؟</a>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center">
+                        <span id="login-text">تسجيل الدخول</span>
+                        <div id="login-spinner" class="hidden animate-spin ml-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    </button>
+
+                    <div class="text-center">
+                        <span class="text-sm text-gray-600">ليس لديك حساب؟</span>
+                        <a href="register.html" class="text-sm text-blue-600 hover:text-blue-800 font-semibold mr-2">إنشاء حساب جديد</a>
+                    </div>
+                </form>
+
+                <!-- Social Login -->
+                <div class="mt-8">
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-300"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-white text-gray-500">أو سجل الدخول باستخدام</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-3">
+                        <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                            <span>Google</span>
+                        </button>
+                        <button type="button" class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                            <span>Apple</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demo Accounts -->
+            <div class="mt-6 bg-blue-50 rounded-xl p-4">
+                <h3 class="text-sm font-semibold text-blue-800 mb-2">حسابات تجريبية للاختبار:</h3>
+                <div class="text-xs text-blue-700 space-y-1">
+                    <p><strong>عميل:</strong> client@example.com / password123</p>
+                    <p><strong>مسافر:</strong> traveler@example.com / password123</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="text-gray-400">
+                    © 2024 الشحنة السريعة. جميع الحقوق محفوظة | قايد صالح المصعبي
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Show loading state
+            document.getElementById('login-text').classList.add('hidden');
+            document.getElementById('login-spinner').classList.remove('hidden');
+            
+            // Clear previous errors
+            document.getElementById('email-error').classList.add('hidden');
+            document.getElementById('password-error').classList.add('hidden');
+            
+            try {
+                // تسجيل الدخول باستخدام Firebase
+                const userCredential = await window.firebaseSignIn(window.firebaseAuth, email, password);
+                const user = userCredential.user;
+                
+                // حفظ بيانات المستخدم في localStorage
+                const userData = {
+                    uid: user.uid,
+                    email: user.email,
+                    emailVerified: user.emailVerified,
+                    displayName: user.displayName,
+                    photoURL: user.photoURL
+                };
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+                
+            } catch (error) {
+                console.error('خطأ في تسجيل الدخول:', error);
+                
+                // عرض رسالة الخطأ المناسبة
+                let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
+                
+                if (error.code === 'auth/invalid-email') {
+                    errorMessage = 'البريد الإلكتروني غير صحيح';
+                    document.getElementById('email-error').textContent = errorMessage;
+                    document.getElementById('email-error').classList.remove('hidden');
+                } else if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+                    document.getElementById('email-error').textContent = errorMessage;
+                    document.getElementById('email-error').classList.remove('hidden');
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'كلمة المرور غير صحيحة';
+                    document.getElementById('password-error').textContent = errorMessage;
+                    document.getElementById('password-error').classList.remove('hidden');
+                } else if (error.code === 'auth/too-many-requests') {
+                    errorMessage = 'تم محاولة الدخول عدة مرات، يرجى المحاولة لاحقاً';
+                    document.getElementById('password-error').textContent = errorMessage;
+                    document.getElementById('password-error').classList.remove('hidden');
+                } else {
+                    document.getElementById('password-error').textContent = errorMessage;
+                    document.getElementById('password-error').classList.remove('hidden');
+                }
+                
+                // Reset loading state
+                document.getElementById('login-text').classList.remove('hidden');
+                document.getElementById('login-spinner').classList.add('hidden');
+            }
+        });
+
+        // التحقق من حالة المستخدم إذا كان مسجلاً بالفعل
+        window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
+            if (user) {
+                // المستخدم مسجل الدخول بالفعل
+                console.log('المستخدم مسجل الدخول:', user);
+            }
+        });
+    </script>
+</body>
+</html>
