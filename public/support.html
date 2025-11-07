@@ -1,508 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الدعم الفني - الشحنة السريعة</title>
-    <meta name="description" content="الأسئلة الشائعة، نموذج الاتصال، ومركز المساعدة لمنصة الشحنة السريعة">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Custom Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Animation Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    
-    <style>
-        body {
-            font-family: 'Tajawal', 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        
-        .gradient-text {
-            background: linear-gradient(45deg, #ed8936, #1a365d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
-        }
-        
-        .faq-item {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .faq-item:hover {
-            background-color: #f9fafb;
-        }
-        
-        .faq-answer {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-        }
-        
-        .faq-answer.open {
-            max-height: 200px;
-        }
-        
-        .rtl {
-            direction: rtl;
-        }
-        
-        .ltr {
-            direction: ltr;
-        }
-        
-        .contact-form {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-        }
-    </style>
-</head>
-<body class="rtl">
-    <!-- Navigation -->
-    <nav class="bg-white/95 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold gradient-text">الشحنة السريعة</h1>
-                    </div>
-                </div>
-                
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4 space-x-reverse">
-                        <a href="index.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الرئيسية</a>
-                        <a href="travelers.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">المسافرون</a>
-                        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة التحكم</a>
-                        <a href="support.html" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600">الدعم الفني</a>
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-4 space-x-reverse">
-                    <button class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors">
-                        تسجيل الدخول
-                    </button>
-                    <button class="hidden md:block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        إنشاء حساب
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Header Section -->
-    <section class="pt-24 pb-12 bg-gradient-to-br from-blue-600 to-purple-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center text-white">
-                <h1 class="text-4xl lg:text-5xl font-bold mb-4">مركز المساعدة</h1>
-                <p class="text-xl text-blue-100 mb-8">نحن هنا لمساعدتك في كل خطوة على منصة الشحنة السريعة</p>
-                
-                <!-- Search Bar -->
-                <div class="max-w-2xl mx-auto">
-                    <div class="relative">
-                        <input type="text" id="faq-search" placeholder="ابحث عن إجابة لسؤالك..." 
-                               class="w-full px-6 py-4 pr-12 rounded-2xl text-gray-800 focus:ring-2 focus:ring-white focus:outline-none">
-                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Quick Actions -->
-    <section class="py-12 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="text-center card-hover bg-blue-50 rounded-2xl p-6">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl">📞</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">الدعم الهاتفي</h3>
-                    <p class="text-sm text-gray-600">اتصل بنا على 920000000</p>
-                    <p class="text-xs text-gray-500">24/7</p>
-                </div>
-                
-                <div class="text-center card-hover bg-green-50 rounded-2xl p-6">
-                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl">💬</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">الدردشة المباشرة</h3>
-                    <p class="text-sm text-gray-600">تحدث مع فريق الدعم الآن</p>
-                    <button class="text-xs text-green-600 font-semibold">ابدأ المحادثة</button>
-                </div>
-                
-                <div class="text-center card-hover bg-orange-50 rounded-2xl p-6">
-                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl">📧</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">البريد الإلكتروني</h3>
-                    <p class="text-sm text-gray-600">gide1979@gmail.com</p>
-                    <p class="text-xs text-gray-500">رد خلال 24 ساعة</p>
-                </div>
-                
-                <div class="text-center card-hover bg-purple-50 rounded-2xl p-6">
-                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl">📱</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-2">واتساب</h3>
-                    <p class="text-sm text-gray-600">+966551519723</p>
-                    <p class="text-xs text-gray-500">رد سريع</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ Section -->
-    <section class="py-20 bg-gray-50">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">الأسئلة الشائعة</h2>
-                <p class="text-xl text-gray-600">إجابات على أكثر الأسئلة التي يتم طرحها</p>
-            </div>
-            
-            <div class="space-y-4">
-                <!-- FAQ Item 1 -->
-                <div class="faq-item bg-white rounded-2xl p-6 shadow-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">كيف أرسل شحنة عبر المنصة؟</h3>
-                        <span class="faq-icon text-2xl text-gray-400">+</span>
-                    </div>
-                    <div class="faq-answer mt-4">
-                        <p class="text-gray-600 leading-relaxed">
-                            إرسال شحنة عبر منصة الشحنة السريعة سهل وبسيط. اتبع الخطوات التالية:
-                            <br><br>
-                            1. أنشئ حسابك على المنصة<br>
-                            2. اختر "إرسال شحنة" من القائمة الرئيسية<br>
-                            3. املأ تفاصيل الشحنة (النوع، الوزن، المواقع)<br>
-                            4. اختر المسافر المناسب من القائمة<br>
-                            5. أكد الطلب وتابع الشحنة لحظة بلحظة
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- FAQ Item 2 -->
-                <div class="faq-item bg-white rounded-2xl p-6 shadow-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">ما هي تكلفة إرسال الشحنة؟</h3>
-                        <span class="faq-icon text-2xl text-gray-400">+</span>
-                    </div>
-                    <div class="faq-answer mt-4">
-                        <p class="text-gray-600 leading-relaxed">
-                            التكلفة تحسب بناءً على عدة عوامل:
-                            <br><br>
-                            • الوزن والحجم الكلي للشحنة<br>
-                            • المسافة بين نقطة الإرسال والاستلام<br>
-                            • نوع الشحنة (هش، قابل للتلف، عادي)<br>
-                            • سرعة التوصيل المطلوبة<br>
-                            • تقييم المسافر والطلب عليه<br><br>
-                            الأسعار تبدأ من 0.5 ريال للكيلوجرم الواحد.
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- FAQ Item 3 -->
-                <div class="faq-item bg-white rounded-2xl p-6 shadow-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">كيف أضمن سلامة شحنتي؟</h3>
-                        <span class="faq-icon text-2xl text-gray-400">+</span>
-                    </div>
-                    <div class="faq-answer mt-4">
-                        <p class="text-gray-600 leading-relaxed">
-                            نتخذ عدة إجراءات لضمان سلامة شحنتك:
-                            <br><br>
-                            • توثيق هوية جميع المسافرين<br>
-                            • نظام تقييم متبادل بين المستخدمين<br>
-                            • تأمين شامل على جميع الشحنات<br>
-                            • تتبع لحظي للشحنة أثناء النقل<br>
-                            • دعم فني متاح 24/7<br>
-                            • إمكانية الدفع عند الاستلام
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- FAQ Item 4 -->
-                <div class="faq-item bg-white rounded-2xl p-6 shadow-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">ما هي أنواع الشحنات المسموح بها؟</h3>
-                        <span class="faq-icon text-2xl text-gray-400">+</span>
-                    </div>
-                    <div class="faq-answer mt-4">
-                        <p class="text-gray-600 leading-relaxed">
-                            نقوم بنقل معظم أنواع الشحنات باستثناء المواد المحظورة:
-                            <br><br>
-                            ✅ مسموح: مستندات، ملابس، إلكترونيات، أطعمة، كتب، أدوية<br>
-                            ❌ محظور: مواد كيميائية، أسلحة، مواد متفجرة، مخدرات<br>
-                            ⚠️ يتطلب تصريح: مواد ثمينة، أعمال فنية، حيوانات حية
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- FAQ Item 5 -->
-                <div class="faq-item bg-white rounded-2xl p-6 shadow-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">كيف أصبح مسافراً على المنصة؟</h3>
-                        <span class="faq-icon text-2xl text-gray-400">+</span>
-                    </div>
-                    <div class="faq-answer mt-4">
-                        <p class="text-gray-600 leading-relaxed">
-                            لتصبح مسافراً معتمداً:
-                            <br><br>
-                            1. أنشئ حسابك كمسافر<br>
-                            2. أرسل المستندات المطلوبة (رخصة القيادة، استمارة المركبة)<br>
-                            3. انتظر موافقة فريق التحقق (24-48 ساعة)<br>
-                            4. أكمل ملفك الشخصي وأضف صورة للمركبة<br>
-                            5. ابدأ في استلام طلبات الشحن
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- FAQ Item 6 -->
-                <div class="faq-item bg-white rounded-2xl p-6 shadow-lg">
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-gray-800">ما هي سياسة الإلغاء والاسترداد؟</h3>
-                        <span class="faq-icon text-2xl text-gray-400">+</span>
-                    </div>
-                    <div class="faq-answer mt-4">
-                        <p class="text-gray-600 leading-relaxed">
-                            سياسة الإلغاء والاسترداد واضحة وعادلة:
-                            <br><br>
-                            • إلغاء قبل قبول المسافر: استرداد كامل<br>
-                            • إلغاء بعد قبول المسافر: استرداد 80%<br>
-                            • إلغاء بعد استلام الشحنة: استرداد 50%<br>
-                            • فقدان أو تلف الشحنة: استرداد كامل + تعويض<br>
-                            • تأخر في التوصيل: خصم من تكلفة الشحن
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Contact Form -->
-    <section class="py-20 bg-white">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">تواصل معنا</h2>
-                <p class="text-xl text-gray-600">هل لم تجد إجابة لسؤالك؟ أرسل لنا رسالة وسنساعدك بكل سرور</p>
-            </div>
-            
-            <div class="contact-form rounded-2xl p-8 shadow-2xl">
-                <form class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">الاسم الكامل</label>
-                        <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="أدخل اسمك الكامل">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
-                        <input type="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="أدخل بريدك الإلكتروني">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">رقم الجوال</label>
-                        <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="أدخل رقم جوالك">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">نوع الرسالة</label>
-                        <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="question">سؤال عام</option>
-                            <option value="problem">مشكلة تقنية</option>
-                            <option value="complaint">شكوى</option>
-                            <option value="suggestion">اقتراح</option>
-                            <option value="other">أخرى</option>
-                        </select>
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">موضوع الرسالة</label>
-                        <input type="text" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="اكتب موضوع رسالتك">
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">نص الرسالة</label>
-                        <textarea rows="6" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="اكتب تفاصيل رسالتك هنا..."></textarea>
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <label class="flex items-center">
-                            <input type="checkbox" required class="ml-2">
-                            <span class="text-sm text-gray-600">أوافق على <a href="terms.html" class="text-blue-600 hover:text-blue-800">الشروط والأحكام</a> و<a href="privacy.html" class="text-blue-600 hover:text-blue-800">سياسة الخصوصية</a></span>
-                        </label>
-                    </div>
-                    
-                    <div class="md:col-span-2">
-                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors">
-                            إرسال الرسالة
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- Legal Links -->
-    <section class="py-16 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-                <h2 class="text-3xl font-bold text-gray-800 mb-4">معلومات قانونية</h2>
-                <p class="text-lg text-gray-600">اطلع على سياساتنا القانونية وشروط الاستخدام</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center card-hover bg-white rounded-2xl p-8">
-                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl">📋</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">الشروط والأحكام</h3>
-                    <p class="text-gray-600 mb-4">اقرأ الشروط الكاملة لاستخدام منصة الشحنة السريعة</p>
-                    <a href="terms.html" class="text-blue-600 hover:text-blue-800 font-semibold">قراءة الشروط</a>
-                </div>
-                
-                <div class="text-center card-hover bg-white rounded-2xl p-8">
-                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl">🔒</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">سياسة الخصوصية</h3>
-                    <p class="text-gray-600 mb-4">تعرف على كيفية حماية خصوصيتك وبياناتك</p>
-                    <a href="privacy.html" class="text-green-600 hover:text-green-800 font-semibold">قراءة السياسة</a>
-                </div>
-                
-                <div class="text-center card-hover bg-white rounded-2xl p-8">
-                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <span class="text-3xl">🛡️</span>
-                    </div>
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">إرشادات السلامة</h3>
-                    <p class="text-gray-600 mb-4">تعرف على إرشادات السلامة لضمان تجربة آمنة</p>
-                    <a href="#" class="text-orange-600 hover:text-orange-800 font-semibold">قراءة الإرشادات</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <h3 class="text-2xl font-bold gradient-text mb-4">الشحنة السريعة</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        منصة إلكترونية تربط بين أصحاب الشحنات والمسافرين لاستغلال الحمولة الفارغة وتسهيل نقل الشحنات داخل المملكة وخارجها.
-                    </p>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
-                    <ul class="space-y-2">
-                        <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">الرئيسية</a></li>
-                        <li><a href="travelers.html" class="text-gray-400 hover:text-white transition-colors">المسافرون</a></li>
-                        <li><a href="dashboard.html" class="text-gray-400 hover:text-white transition-colors">لوحة التحكم</a></li>
-                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الدعم الفني</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">المساعدة</h4>
-                    <ul class="space-y-2">
-                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الأسئلة الشائعة</a></li>
-                        <li><a href="terms.html" class="text-gray-400 hover:text-white transition-colors">الشروط والأحكام</a></li>
-                        <li><a href="privacy.html" class="text-gray-400 hover:text-white transition-colors">سياسة الخصوصية</a></li>
-                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">اتصل بنا</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">معلومات التواصل</h4>
-                    <div class="space-y-2 text-gray-400">
-                        <p>📧 gide1979@gmail.com</p>
-                        <p>📞 +966551519723</p>
-                        <p>📍 المملكة العربية السعودية</p>
-                    </div>
-                    <div class="mt-4">
-                        <p class="text-sm text-gray-400">
-                            صاحب الفكرة: قايد صالح المصعبي
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
-                <p class="text-gray-400">
-                    © 2024 الشحنة السريعة. جميع الحقوق محفوظة | قايد صالح المصعبي
-                </p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- JavaScript -->
-<script src="auth.js"></script>
-<script src="main.js"></script>
-    
-    <script>
-        // FAQ Toggle Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const faqItems = document.querySelectorAll('.faq-item');
-            
-            faqItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    const answer = this.querySelector('.faq-answer');
-                    const icon = this.querySelector('.faq-icon');
-                    
-                    // Close all other FAQ items
-                    faqItems.forEach(otherItem => {
-                        if (otherItem !== this) {
-                            const otherAnswer = otherItem.querySelector('.faq-answer');
-                            const otherIcon = otherItem.querySelector('.faq-icon');
-                            otherAnswer.classList.remove('open');
-                            otherIcon.textContent = '+';
-                        }
-                    });
-                    
-                    // Toggle current FAQ item
-                    if (answer.classList.contains('open')) {
-                        answer.classList.remove('open');
-                        icon.textContent = '+';
-                    } else {
-                        answer.classList.add('open');
-                        icon.textContent = '−';
-                    }
-                });
-            });
-            
-            // Search FAQ functionality
-            const searchInput = document.getElementById('faq-search');
-            searchInput.addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                
-                faqItems.forEach(item => {
-                    const question = item.querySelector('h3').textContent.toLowerCase();
-                    const answer = item.querySelector('.faq-answer p').textContent.toLowerCase();
-                    
-                    if (question.includes(searchTerm) || answer.includes(searchTerm)) {
-                        item.style.display = 'block';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-            });
-        });
-    </script>
-</body>
-</html>

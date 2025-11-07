@@ -1,1068 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<head>
-    <!-- الأكواد الأخرى -->
-    
-    <!-- CSS إضافي لتصميم العملاء -->
-    <style>
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 24px;
-            margin-top: 2rem;
-        }
-        
-        .testimonial-card {
-            background: #f9fafb;
-            border-radius: 1rem;
-            padding: 2rem;
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-        }
-        
-        .testimonial-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        }
-    </style>
-</head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الشحنة السريعة - منصة الشحن الذكية</title>
-    <meta name="description" content="منصة إلكترونية تربط بين أصحاب الشحنات والمسافرين لاستغلال المساحة الفارغة وتسهيل نقل الشحنات حول العالم ">
-    
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Custom Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Firebase -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyChPGP2JICwH_IGs7BT-DDZH2LzuK7_L58",
-            authDomain: "fastship-2026.firebaseapp.com",
-            projectId: "fastship-2026",
-            storageBucket: "fastship-2026.firebasestorage.app",
-            messagingSenderId: "646769615933",
-            appId: "1:646769615933:web:5fd3c82c31969192f9f654"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        
-        // جعل auth متاحاً globally
-        window.firebaseAuth = auth;
-        window.firebaseOnAuthStateChanged = onAuthStateChanged;
-        window.firebaseSignOut = signOut;
-    </script>
-    
-    <!-- Animation Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" rel="stylesheet">
-    
-    <!-- ECharts -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    
-    <!-- Leaflet for Maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <style>
-        body {
-            font-family: 'Tajawal', 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
-        
-        .hero-bg {
-            background: linear-gradient(rgba(26, 54, 93, 0.8), rgba(26, 54, 93, 0.8)), url('resources/hero-logistics.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }
-        
-        .gradient-text {
-            background: linear-gradient(45deg, #ed8936, #1a365d);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .card-hover {
-            transition: all 0.3s ease;
-        }
-        
-        .card-hover:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-        
-        .package-type {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .package-type:hover {
-            transform: scale(1.05);
-        }
-        
-        .package-type.selected {
-            border-color: #ed8936;
-            background-color: #fff7ed;
-        }
-        
-        .progress-bar {
-            transition: width 0.3s ease;
-        }
-        
-        .floating-element {
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .rtl {
-            direction: rtl;
-        }
-        
-        .ltr {
-            direction: ltr;
-        }
-    </style>
-</head>
-<body class="rtl">
-    <!-- Navigation -->
-    <nav class="bg-white/95 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold gradient-text">الشحنة السريعة</h1>
-                    </div>
-                </div>
-                
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-4 space-x-reverse">
-                        <a href="index.html" class="text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md text-sm font-medium border-b-2 border-blue-600">الرئيسية</a>
-                        <a href="travelers.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">المسافرون</a>
-                        <a href="dashboard.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">لوحة التحكم</a>
-                        <a href="support.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">الدعم</a>
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-4 space-x-reverse">
-                    <a href="login.html" id="login-btn" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors">
-                        تسجيل الدخول
-                    </a>
-                    <a href="register.html" id="register-btn" class="hidden md:block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        إنشاء حساب
-                    </a>
-                    <div id="user-menu" class="hidden flex items-center space-x-4 space-x-reverse">
-                        <div class="flex items-center">
-                            <img id="user-avatar" src="https://kimi-web-img.moonshot.cn/img/www.dropoff.com/55cca0b187c44c02ad7d55fdd54a23b1061a7806.jpeg" alt="الملف الشخصي" class="w-8 h-8 rounded-full object-cover ml-2">
-                            <div class="text-right">
-                                <div id="user-name" class="text-sm font-medium text-gray-700"></div>
-                                <div id="user-type" class="text-xs text-gray-500"></div>
-                            </div>
-                        </div>
-                        <button onclick="logout()" class="text-gray-700 hover:text-blue-600 text-sm">
-                            تسجيل الخروج
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-        <!-- Hero Section -->
-    <section class="hero-bg min-h-screen flex items-center pt-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="grid grid-cols-1 gap-12 items-center">
-                <!-- Hero Content -->
-                <div class="text-white text-center">
-                    <h1 class="hero-title text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-                        أرسل شحنتك مع أقرب ناقل
-                        <span class="typed-text gradient-text"></span>
-                    </h1>
-                    <p class="text-xl mb-12 text-gray-200 leading-relaxed max-w-3xl mx-auto">
-                        منصة إلكترونية تربط بين أصحاب الشحنات والمسافرين لاستغلال الحمولة الفارغة وتسهيل نقل الشحنات حول العالم بطريقة آمنة وفعالة.
-                    </p>
-                    
-                    <!-- Action Cards - Bigger and Centered -->
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                        <!-- Send Shipment Card - Bigger -->
-                        <div class="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer transform hover:scale-105" onclick="handleSendShipment()">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4">📦</div>
-                                <h3 class="text-2xl lg:text-3xl font-bold text-white mb-4">أرسل شحنتك</h3>
-                                <p class="text-gray-200 text-lg mb-6">أرسل شحنتك بسهولة وأمان مع أفضل المسافرين</p>
-                            </div>
-                            <div class="bg-white/20 rounded-xl p-6">
-                                <h4 class="text-white font-semibold mb-4 text-center text-xl">كيفية الإرسال:</h4>
-                                <ul class="text-gray-200 space-y-3 text-right text-base">
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• اختر نوع الشحنة والوزن</span>
-                                    </li>
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• حدد مواقع الإرسال والاستلام</span>
-                                    </li>
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• اختر المسافر المناسب</span>
-                                    </li>
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• تتبع شحنتك لحظة بلحظة</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="mt-6 text-center">
-                                <button class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
-                                    ابدأ الآن
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Deliver Shipments Card - Bigger -->
-                        <div class="bg-white/10 backdrop-blur-sm rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer transform hover:scale-105" onclick="handleDeliverShipments()">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4">🚗</div>
-                                <h3 class="text-2xl lg:text-3xl font-bold text-white mb-4">توصيل شحنات</h3>
-                                <p class="text-gray-200 text-lg mb-6">كن مسافراً واكسب دخل إضافي من رحلاتك</p>
-                            </div>
-                            <div class="bg-white/20 rounded-xl p-6">
-                                <h4 class="text-white font-semibold mb-4 text-center text-xl">كيفية التوصيل:</h4>
-                                <ul class="text-gray-200 space-y-3 text-right text-base">
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• سجل كمسافر معتمد</span>
-                                    </li>
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• استعرض طلبات الشحن المتاحة</span>
-                                    </li>
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• اختر الطلبات المناسبة لرحلتك</span>
-                                    </li>
-                                    <li class="flex items-center justify-end">
-                                        <span class="mr-3">• كسب دخل إضافي من المساحة الفارغة</span>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="mt-6 text-center">
-                                <button class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
-                                    ابدأ الآن
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Trust Indicators -->
-                    <div class="grid grid-cols-3 gap-8 text-center mt-16">
-                        <div>
-                            <div class="text-4xl font-bold counter" data-target="15000">0</div>
-                            <div class="text-lg text-gray-300">شحنة تم توصيلها</div>
-                        </div>
-                        <div>
-                            <div class="text-4xl font-bold counter" data-target="2500">0</div>
-                            <div class="text-lg text-gray-300">مسافر نشط</div>
-                        </div>
-                        <div>
-                            <div class="text-4xl font-bold counter" data-target="98">0</div>
-                            <div class="text-lg text-gray-300">نسبة الرضا</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
- </div>
-    </section>
-                
-    <!-- How It Works Section -->
-    <section class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">كيف تعمل المنصة؟</h2>
-                <p class="text-xl text-gray-600">ثلاث خطوات بسيطة لإرسال شحنتك بأمان وسرعة</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center card-hover bg-gray-50 rounded-2xl p-8">
-                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-3xl">📝</span>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">1. أنشئ طلب الشحنة</h3>
-                    <p class="text-gray-600 leading-relaxed">حدد نوع الشحنة، الوزن، والمواقع وسنجد لك المسافر المناسب خلال دقائق</p>
-                </div>
-                
-                <div class="text-center card-hover bg-gray-50 rounded-2xl p-8">
-                    <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-3xl">🚗</span>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">2. اختر المسافر</h3>
-                    <p class="text-gray-600 leading-relaxed">تصفح المسافرين المتاحين، شاهد تقييماتهم واختر الأنسب لشحنتك</p>
-                </div>
-                
-                <div class="text-center card-hover bg-gray-50 rounded-2xl p-8">
-                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-3xl">📦</span>
-                    </div>
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">3. تتبع الشحنة</h3>
-                    <p class="text-gray-600 leading-relaxed">تابع شحنتك لحظة بلحظة حتى تصل بأمان إلى وجهتها</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Shipment Types Section -->
-    <section class="py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">أنواع الشحنات التي ننقلها</h2>
-                <p class="text-xl text-gray-600">نقوم بنقل جميع أنواع الشحنات بأمان وكفاءة</p>
-            </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                <div class="bg-white rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl mb-4">📄</div>
-                    <h3 class="font-semibold text-gray-800">مستندات</h3>
-                    <p class="text-sm text-gray-600 mt-2">أوراق رسمية، عقود، مستندات مهمة</p>
-                </div>
-                
-                <div class="bg-white rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl mb-4">📱</div>
-                    <h3 class="font-semibold text-gray-800">إلكترونيات</h3>
-                    <p class="text-sm text-gray-600 mt-2">هواتف، لابتوب، أجهزة إلكترونية</p>
-                </div>
-                
-                <div class="bg-white rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl mb-4">👕</div>
-                    <h3 class="font-semibold text-gray-800">ملابس</h3>
-                    <p class="text-sm text-gray-600 mt-2">ملابس، أقمشة، إكسسوارات</p>
-                </div>
-                
-                <div class="bg-white rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl mb-4">🍕</div>
-                    <h3 class="font-semibold text-gray-800">أطعمة</h3>
-                    <p class="text-sm text-gray-600 mt-2">منتجات غذائية، حلويات، توابل</p>
-                </div>
-                
-                <div class="bg-white rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl mb-4">📚</div>
-                    <h3 class="font-semibold text-gray-800">كتب</h3>
-                    <p class="text-sm text-gray-600 mt-2">كتب، مجلات، مواد تعليمية</p>
-                </div>
-                
-                <div class="bg-white rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl mb-4">💊</div>
-                    <h3 class="font-semibold text-gray-800">أدوية</h3>
-                    <p class="text-sm text-gray-600 mt-2">أدوية، مستلزمات طبية</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Statistics Section -->
-    <section class="py-20 bg-blue-600 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                <div>
-                    <div class="text-5xl font-bold mb-2 counter" data-target="15000">0</div>
-                    <div class="text-blue-200">شحنة تم توصيلها</div>
-                </div>
-                <div>
-                    <div class="text-5xl font-bold mb-2 counter" data-target="2500">0</div>
-                    <div class="text-blue-200">مسافر نشط</div>
-                </div>
-                <div>
-                    <div class="text-5xl font-bold mb-2 counter" data-target="98">0</div>
-                    <div class="text-blue-200">نسبة الرضا</div>
-                </div>
-                <div>
-                    <div class="text-5xl font-bold mb-2 counter" data-target="500">0</div>
-                    <div class="text-blue-200">مدينة مغطاة</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-        <!-- Testimonials Section - Grid Version -->
-    <section class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">ماذا يقول عملاؤنا</h2>
-                <p class="text-xl text-gray-600">أكثر من 15,000 عميل راضٍ عن خدماتنا</p>
-            </div>
-            
-            <!-- Grid Layout بدل السلايدر -->
-            <div class="testimonials-grid">
-                <!-- العميل 1 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/citydelivery.com.vn/91e8f1c59ea323b3451428d49d42e5175d177b1b.jpg" alt="فاطمة الزهراني" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">فاطمة الزهراني</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "خدمة ممتازة وموثوقة. أرسلت طرداً إلى الدمام ووصل في الوقت المحدد. واجهة سهلة الاستخدام ودعم فني رائع."
-                    </p>
-                </div>
-
-                <!-- العميل 2 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/www.dropoff.com/55cca0b187c44c02ad7d55fdd54a23b1061a7806.jpeg" alt="أحمد محمد" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">أحمد محمد</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "منصة رائعة! تمكنت من إرسال مستندات مهمة إلى جدة في نفس اليوم وبسعر مناسب جداً. أنصح الجميع بتجربتها."
-                    </p>
-                </div>
-
-                <!-- العميل 3 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/www.logos3pl.com/5d00aff09838f481e5de19381115e8d8e0e18878.jpg" alt="خالد السيد" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">خالد السيد</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "كمسافر، أحب هذه المنصة لأنها تساعدني على تغطية تكاليف السفر وفي نفس الوقت أساعد الآخرين. دخل إضافي ممتاز!"
-                    </p>
-                </div>
-
-                <!-- العميل 4 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/media.istockphoto.com/04dc512f136ba384803bf3a0bc2e3634f672862b.jpg" alt="سارة القحطاني" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">سارة القحطاني</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "كنت أبحث عن طريقة آمنة لإرسال هدايا لعائلتي في المدينة المنورة. المنصة وفرت لي مسافر موثوق والشحنات وصلت بكفاءة عالية."
-                    </p>
-                </div>
-
-                <!-- العميل 5 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/9b0fe9c31b4d3f3b8e7c9d8c8a3e7d3a.jpg" alt="محمد العتيبي" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">محمد العتيبي</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "كمستورد، أحتاج شحن منتجات من جدة إلى الرياض أسبوعياً. المنصة وفرت لي تكاليف أقل من شركات الشحن التقليدية بنسبة 40%."
-                    </p>
-                </div>
-
-                <!-- العميل 6 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/8a7b9c4d6e5f3a2b1c0d9e8f7a6b5c4d.jpg" alt="نورة الشمري" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">نورة الشمري</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "أعجبني نظام التتبع اللحظي. كنت أتابع شحنتي خطوة بخطوة من الرياض إلى أبها. شعور رائع بالأمان والاطمئنان."
-                    </p>
-                </div>
-
-                <!-- العميل 7 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d.jpg" alt="عبدالله الغامدي" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">عبدالله الغامدي</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "كطالب جامعي، المنصة ساعدتني في كسب دخل إضافي من خلال نقل شحنات في رحلاتي بين المدن. مرونة في الوقت ودخل جيد."
-                    </p>
-                </div>
-
-                <!-- العميل 8 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/6e5f4d3c2b1a0b9c8d7e6f5a4b3c2d1e.jpg" alt="لطيفة الحربي" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">لطيفة الحربي</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "أرسلت جهاز iPad إلى ابني في الجامعة. السعر كان مناسب والتوصيل كان سريعاً. نظام الدفع الآمن يبعث على الطمأنينة."
-                    </p>
-                </div>
-
-                <!-- العميل 9 -->
-                <div class="testimonial-card">
-                    <div class="flex items-center mb-6">
-                        <img src="https://kimi-web-img.moonshot.cn/img/img.freepik.com/5d4c3b2a1b0c9d8e7f6a5b4c3d2e1f0a.jpg" alt="ياسر الرشيد" class="w-16 h-16 rounded-full object-cover ml-4">
-                        <div>
-                            <h4 class="font-bold text-gray-800">ياسر الرشيد</h4>
-                            <div class="flex text-yellow-500">
-                                <span>★★★★★</span>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-gray-600 leading-relaxed">
-                        "ممتازة للمشاريع الصغيرة! وفرت لي تكاليف شحن المنتجات لعملائي. الآن أستطيع منافسة المتاجر الكبيرة بفضل تخفيضات الشحن."
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Safety Features Section -->
-    <section class="py-20 bg-gray-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-800 mb-4">مميزات الأمان والحماية</h2>
-                <p class="text-xl text-gray-600">نضمن لك تجربة آمنة وموثوقة في كل خطوة</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-3xl">✅</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">توثيق الهوية</h3>
-                    <p class="text-gray-600">جميع المستخدمين موثقون بشكل كامل لضمان الأمان</p>
-                </div>
-                
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-3xl">🛡️</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">تأمين الشحنات</h3>
-                    <p class="text-gray-600">تأمين شامل على جميع الشحنات ضد الفقدان والتلف</p>
-                </div>
-                
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-3xl">⭐</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">نظام التقييم</h3>
-                    <p class="text-gray-600">تقييمات متبادلة لضمان جودة الخدمة</p>
-                </div>
-                
-                <div class="text-center">
-                    <div class="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <span class="text-3xl">📞</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">دعم فني 24/7</h3>
-                    <p class="text-gray-600">فريق دعم متاح على مدار الساعة للمساعدة</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="bg-gray-900 text-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div>
-                    <h3 class="text-2xl font-bold gradient-text mb-4">الشحنة السريعة</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        منصة إلكترونية تربط بين أصحاب الشحنات والمسافرين لاستغلال الحمولة الفارغة وتسهيل نقل الشحنات داخل المملكة وخارجها.
-                    </p>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
-                    <ul class="space-y-2">
-                        <li><a href="index.html" class="text-gray-400 hover:text-white transition-colors">الرئيسية</a></li>
-                        <li><a href="travelers.html" class="text-gray-400 hover:text-white transition-colors">المسافرون</a></li>
-                        <li><a href="dashboard.html" class="text-gray-400 hover:text-white transition-colors">لوحة التحكم</a></li>
-                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الدعم الفني</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">المساعدة</h4>
-                    <ul class="space-y-2">
-                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">الأسئلة الشائعة</a></li>
-                        <li><a href="terms.html" class="text-gray-400 hover:text-white transition-colors">الشروط والأحكام</a></li>
-                        <li><a href="privacy.html" class="text-gray-400 hover:text-white transition-colors">سياسة الخصوصية</a></li>
-                        <li><a href="support.html" class="text-gray-400 hover:text-white transition-colors">اتصل بنا</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">معلومات التواصل</h4>
-                    <div class="space-y-2 text-gray-400">
-                        <p>📧 gide1979@gmail.com</p>
-                        <p>📞 +966551519723</p>
-                        <p>📍 المملكة العربية السعودية</p>
-                    </div>
-                    <div class="mt-4">
-                        <p class="text-sm text-gray-400">
-                            صاحب الفكرة: قايد صالح المصعبي
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
-                <p class="text-gray-400">
-                    © 2024 الشحنة السريعة. جميع الحقوق محفوظة | قايد صالح المصعبي
-                </p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- JavaScript -->
-    <script>
-        // تحديث واجهة المستخدم بناءً على حالة تسجيل الدخول
-        function updateAuthUI(user) {
-            const loginBtn = document.getElementById('login-btn');
-            const registerBtn = document.getElementById('register-btn');
-            const userMenu = document.getElementById('user-menu');
-            const userName = document.getElementById('user-name');
-            const userType = document.getElementById('user-type');
-            const userAvatar = document.getElementById('user-avatar');
-
-            if (user) {
-                // إخفاء أزرار تسجيل الدخول والتسجيل
-                if (loginBtn) loginBtn.style.display = 'none';
-                if (registerBtn) registerBtn.style.display = 'none';
-                
-                // إظهار قائمة المستخدم
-                if (userMenu) userMenu.classList.remove('hidden');
-                if (userName) userName.textContent = user.displayName || user.email;
-                if (userType) userType.textContent = 'مستخدم';
-                if (userAvatar) userAvatar.src = user.photoURL || 'https://kimi-web-img.moonshot.cn/img/www.dropoff.com/55cca0b187c44c02ad7d55fdd54a23b1061a7806.jpeg';
-            } else {
-                // إظهار أزرار تسجيل الدخول والتسجيل
-                if (loginBtn) loginBtn.style.display = 'block';
-                if (registerBtn) registerBtn.style.display = 'block';
-                
-                // إخفاء قائمة المستخدم
-                if (userMenu) userMenu.classList.add('hidden');
-            }
-        }
-
-        // تسجيل الخروج
-        async function logout() {
-            try {
-                await window.firebaseSignOut(window.firebaseAuth);
-                localStorage.removeItem('currentUser');
-                window.location.href = 'index.html';
-            } catch (error) {
-                console.error('خطأ في تسجيل الخروج:', error);
-            }
-        }
-
-        // التحقق من حالة المصادقة عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', function() {
-            window.firebaseOnAuthStateChanged(window.firebaseAuth, (user) => {
-                if (user) {
-                    // حفظ بيانات المستخدم
-                    const userData = {
-                        uid: user.uid,
-                        email: user.email,
-                        emailVerified: user.emailVerified,
-                        displayName: user.displayName,
-                        photoURL: user.photoURL
-                    };
-                    localStorage.setItem('currentUser', JSON.stringify(userData));
-                    updateAuthUI(userData);
-                } else {
-                    localStorage.removeItem('currentUser');
-                    updateAuthUI(null);
-                }
-            });
-
-            // تحميل بيانات المستخدم من localStorage إذا كانت موجودة
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                updateAuthUI(JSON.parse(savedUser));
-            }
-        });
-    </script>
-    <script src="main.js"></script>
-    <!-- JavaScript الإضافي للأزرار -->
-    <script>
-        // جعل أزرار الهيرو تعمل
-        document.addEventListener('DOMContentLoaded', function() {
-            // زر "أرسل شحنة"
-            const sendShipmentBtn = document.querySelector('.bg-orange-500.hover\\:bg-orange-600:first-of-type');
-            if (sendShipmentBtn) {
-                sendShipmentBtn.addEventListener('click', function() {
-                    // إذا كان المستخدم مسجل دخول، انتقل مباشرة إلى إنشاء شحنة
-                    // إذا لم يكن مسجل، انتقل إلى صفحة التسجيل
-                    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                    if (currentUser && currentUser.uid) {
-                        window.location.href = 'dashboard.html';
-                    } else {
-                        window.location.href = 'register.html?type=client';
-                    }
-                });
-            }
-
-            // زر "توصيل شحنات"
-            const deliverShipmentsBtn = document.querySelector('.bg-orange-500.hover\\:bg-orange-600:last-of-type');
-            if (deliverShipmentsBtn) {
-                deliverShipmentsBtn.addEventListener('click', function() {
-                    // إذا كان المستخدم مسجل دخول، انتقل إلى لوحة التحكم
-                    // إذا لم يكن مسجل، انتقل إلى صفحة التسجيل كمسافر
-                    const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-                    if (currentUser && currentUser.uid) {
-                        window.location.href = 'dashboard.html';
-                    } else {
-                        window.location.href = 'register.html?type=traveler';
-                    }
-                });
-            }
-
-            // جعل أزرار أنواع الشحنات تعمل
-            const packageTypes = document.querySelectorAll('.package-type');
-            packageTypes.forEach(type => {
-                type.addEventListener('click', function() {
-                    // إزالة التحديد من جميع الأنواع
-                    packageTypes.forEach(t => t.classList.remove('selected', 'border-orange-500', 'bg-orange-50'));
-                    // إضافة التحديد للنوع المختار
-                    this.classList.add('selected', 'border-orange-500', 'bg-orange-50');
-                });
-            });
-
-            // جعل أزرار الخطوات تعمل
-            const nextButtons = document.querySelectorAll('.next-step');
-            const prevButtons = document.querySelectorAll('.prev-step');
-            const submitButton = document.querySelector('.submit-shipment');
-
-            let currentFormStep = 1;
-
-            // أزرار التالي
-            nextButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    if (validateFormStep(currentFormStep)) {
-                        document.getElementById(`step-${currentFormStep}`).classList.add('hidden');
-                        currentFormStep++;
-                        document.getElementById(`step-${currentFormStep}`).classList.remove('hidden');
-                        updateProgressBar(currentFormStep);
-                    }
-                });
-            });
-
-            // أزرار السابق
-            prevButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    document.getElementById(`step-${currentFormStep}`).classList.add('hidden');
-                    currentFormStep--;
-                    document.getElementById(`step-${currentFormStep}`).classList.remove('hidden');
-                    updateProgressBar(currentFormStep);
-                });
-            });
-
-            // زر إرسال الشحنة
-            if (submitButton) {
-                submitButton.addEventListener('click', function() {
-                    if (validateFormStep(currentFormStep)) {
-                        // عرض رسالة نجاح
-                        showNotification('تم إرسال طلب الشحنة بنجاح! سنتواصل معك قريباً.', 'success');
-                        
-                        // إعادة تعيين النموذج بعد 2 ثانية
-                        setTimeout(() => {
-                            resetShipmentForm();
-                        }, 2000);
-                    }
-                });
-            }
-
-            // تحديث شريط التقدم
-            function updateProgressBar(step) {
-                const progressBar = document.querySelector('.progress-bar');
-                const percentage = (step / 4) * 100;
-                progressBar.style.width = `${percentage}%`;
-            }
-
-            // التحقق من صحة خطوات النموذج
-            function validateFormStep(step) {
-                let isValid = true;
-
-                if (step === 1) {
-                    // التحقق من اختيار نوع الشحنة
-                    const selectedPackage = document.querySelector('.package-type.selected');
-                    if (!selectedPackage) {
-                        showNotification('يرجى اختيار نوع الشحنة', 'error');
-                        isValid = false;
-                    }
-                } else if (step === 2) {
-                    // التحقق من الوزن والأبعاد
-                    const weight = document.getElementById('weight').value;
-                    if (!weight || weight <= 0) {
-                        showNotification('يرجى إدخال وزن صحيح للشحنة', 'error');
-                        isValid = false;
-                    }
-                } else if (step === 3) {
-                    // التحقق من المدن
-                    const fromCity = document.getElementById('from-city').value;
-                    const toCity = document.getElementById('to-city').value;
-                    
-                    if (!fromCity || !toCity) {
-                        showNotification('يرجى اختيار مدني الإرسال والاستلام', 'error');
-                        isValid = false;
-                    } else if (fromCity === toCity) {
-                        showNotification('مدينة الإرسال والاستلام يجب أن تكونا مختلفتين', 'error');
-                        isValid = false;
-                    } else {
-                        // تحديث صفحة المراجعة
-                        updateReviewSection();
-                    }
-                }
-
-                return isValid;
-            }
-
-            // تحديث قسم المراجعة
-            function updateReviewSection() {
-                const selectedPackage = document.querySelector('.package-type.selected');
-                const weight = document.getElementById('weight').value;
-                const fromCity = document.getElementById('from-city').value;
-                const toCity = document.getElementById('to-city').value;
-
-                if (selectedPackage) {
-                    document.getElementById('review-type').textContent = selectedPackage.querySelector('.text-sm').textContent;
-                }
-                document.getElementById('review-weight').textContent = weight;
-                document.getElementById('review-from').textContent = fromCity;
-                document.getElementById('review-to').textContent = toCity;
-
-                // حساب السعر التقديري
-                const price = calculatePrice(weight, fromCity, toCity);
-                document.getElementById('review-price').textContent = price;
-            }
-
-            // حساب السعر التقديري
-            function calculatePrice(weight, fromCity, toCity) {
-                let basePrice = 50; // سعر أساسي
-                let weightPrice = weight * 5; // 5 ريال لكل كيلو
-                let distanceMultiplier = 1;
-
-                // مضاعف المسافة (مثال مبسط)
-                if (fromCity === 'الرياض' && toCity === 'جدة') distanceMultiplier = 1.5;
-                else if (fromCity === 'الرياض' && toCity === 'الدمام') distanceMultiplier = 1.2;
-                else if (fromCity === 'جدة' && toCity === 'الدمام') distanceMultiplier = 1.3;
-
-                const totalPrice = Math.round((basePrice + weightPrice) * distanceMultiplier);
-                return totalPrice;
-            }
-
-            // إعادة تعيين النموذج
-            function resetShipmentForm() {
-                // إعادة تعيين الخطوات
-                document.querySelectorAll('.step-content').forEach((step, index) => {
-                    if (index === 0) {
-                        step.classList.remove('hidden');
-                    } else {
-                        step.classList.add('hidden');
-                    }
-                });
-
-                // إعادة تعيين التحديد
-                document.querySelectorAll('.package-type').forEach(type => {
-                    type.classList.remove('selected', 'border-orange-500', 'bg-orange-50');
-                });
-
-                // إعادة تعيين الحقول
-                document.getElementById('weight').value = '';
-                document.getElementById('length').value = '';
-                document.getElementById('width').value = '';
-                document.getElementById('height').value = '';
-                document.getElementById('from-city').value = '';
-                document.getElementById('to-city').value = '';
-                document.getElementById('description').value = '';
-
-                // إعادة تعيين شريط التقدم
-                updateProgressBar(1);
-                currentFormStep = 1;
-            }
-
-            // وظيفة لعرض الإشعارات
-            function showNotification(message, type = 'info') {
-                const notification = document.createElement('div');
-                notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white transform transition-transform duration-300 ${
-                    type === 'success' ? 'bg-green-500' : 
-                    type === 'error' ? 'bg-red-500' : 
-                    type === 'warning' ? 'bg-yellow-500' : 
-                    'bg-blue-500'
-                }`;
-                
-                notification.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span>${message}</span>
-                        <button onclick="this.parentElement.parentElement.remove()" class="mr-2 text-white hover:text-gray-200">
-                            ✕
-                        </button>
-                    </div>
-                `;
-                
-                document.body.appendChild(notification);
-                
-                // إزالة الإشعار تلقائياً بعد 5 ثوانٍ
-                setTimeout(() => {
-                    if (notification.parentElement) {
-                        notification.remove();
-                    }
-                }, 5000);
-            }
-
-            // جعل الأرقام تعمل (العدادات)
-            const counters = document.querySelectorAll('.counter');
-            counters.forEach(counter => {
-                const target = parseInt(counter.getAttribute('data-target'));
-                const increment = target / 100;
-                let current = 0;
-
-                const updateCounter = () => {
-                    if (current < target) {
-                        current += increment;
-                        counter.textContent = Math.ceil(current);
-                        setTimeout(updateCounter, 20);
-                    } else {
-                        counter.textContent = target.toLocaleString();
-                    }
-                };
-
-                // بدء العد عند التمرير إلى القسم
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            updateCounter();
-                            observer.unobserve(entry.target);
-                        }
-                    });
-                });
-
-                observer.observe(counter);
-            });
-
-            // تفعيل شرائح الآراء (Testimonials)
-            if (typeof Splide !== 'undefined') {
-                new Splide('.splide', {
-                    type: 'loop',
-                    perPage: 1,
-                    autoplay: true,
-                    interval: 4000,
-                    pauseOnHover: true,
-                    breakpoints: {
-                        768: {
-                            perPage: 1,
-                        }
-                    }
-                }).mount();
-            }
-
-            console.log('تم تحميل جميع الوظائف بنجاح!');
-        });
-
-        // إضافة تأثيرات CSS إضافية
-        const style = document.createElement('style');
-        style.textContent = `
-            .package-type.selected {
-                border-color: #ed8936 !important;
-                background-color: #fff7ed !important;
-                transform: scale(1.05);
-            }
-            
-            .progress-bar {
-                transition: width 0.5s ease-in-out;
-            }
-            
-            .fade-in {
-                animation: fadeIn 0.5s ease-in;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(20px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        `;
-        document.head.appendChild(style);
-    </script>
-    <!-- JavaScript المعدل للكروت -->
-    <script>
-        // دالة معالجة زر "أرسل شحنتك"
-        function handleSendShipment() {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            if (currentUser && currentUser.uid) {
-                // إذا كان مسجل دخول، اذهب إلى لوحة التحكم مع فتح نموذج الشحنة
-                window.location.href = 'dashboard.html?action=create-shipment';
-            } else {
-                // إذا لم يكن مسجل، انتقل إلى صفحة التسجيل
-                window.location.href = 'register.html?type=client';
-            }
-        }
-
-        // دالة معالجة زر "توصيل شحنات"
-        function handleDeliverShipments() {
-            const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-            if (currentUser && currentUser.uid) {
-                // إذا كان مسجل دخول، اذهب إلى لوحة التحكم
-                window.location.href = 'dashboard.html';
-            } else {
-                // إذا لم يكن مسجل، انتقل إلى صفحة التسجيل كمسافر
-                window.location.href = 'register.html?type=traveler';
-            }
-        }
-    </script>
-    </script>
-        // إضافة تأثيرات hover للكروت
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.bg-white\\/10');
-            cards.forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-5px)';
-                });
-                
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-        });
-    </script>
-</body>
-</body>
-</html>
-</body>
-</html>
