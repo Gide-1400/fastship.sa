@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الملف الشخصي - FastShip</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../assets/css/custom.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config/supabase.js"></script>
+    <script src="../assets/js/session-manager.js"></script>
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white/10 backdrop-blur-lg rounded-xl p-8 w-full max-w-2xl shadow-lg">
+        <h1 class="text-2xl font-bold text-white mb-6 text-center">
+            <i class="fas fa-user mr-2"></i>الملف الشخصي
+        </h1>
+
+        <div id="profileContent" class="space-y-6">
+            <!-- سيتم تحميل محتوى الملف الشخصي هنا -->
+            <div class="text-center text-white">
+                <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                <p>جاري تحميل الملف الشخصي...</p>
+            </div>
+        </div>
+
+        <div class="mt-6 text-center">
+            <a href="../index.html" class="text-blue-200 hover:text-white text-sm">
+                <i class="fas fa-arrow-right ml-1"></i> العودة للرئيسية
+            </a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            await window.sessionManager.init();
+
+            // Check user authentication and type
+            if (!window.sessionManager.requireUserType('shipper')) {
+                return; // Will redirect automatically
+            }
+
+            const user = window.sessionManager.getCurrentUser();
+            if (!user) {
+                alert('يرجى تسجيل الدخول أولاً');
+                window.location.href = 'auth/login.html';
+                return;
+            }
+
+            loadProfile();
+        });
+
+        async function loadProfile() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+
+                const profileContent = document.getElementById('profileContent');
+                profileContent.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <h3 class="text-white font-bold mb-2">المعلومات الأساسية</h3>
+                            <p class="text-gray-200"><strong>الاسم:</strong> ${user.profile?.full_name || 'غير محدد'}</p>
+                            <p class="text-gray-200"><strong>البريد الإلكتروني:</strong> ${user.email}</p>
+                            <p class="text-gray-200"><strong>الهاتف:</strong> ${user.profile?.phone || 'غير محدد'}</p>
+                            <p class="text-gray-200"><strong>نوع المستخدم:</strong> شاحن</p>
+                        </div>
+
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <h3 class="text-white font-bold mb-2">إحصائيات الحساب</h3>
+                            <p class="text-gray-200"><strong>تاريخ التسجيل:</strong> ${user.profile?.created_at ? new Date(user.profile.created_at).toLocaleDateString('ar-SA') : 'غير محدد'}</p>
+                            <p class="text-gray-200"><strong>آخر دخول:</strong> ${user.profile?.last_login ? new Date(user.profile.last_login).toLocaleDateString('ar-SA') : 'غير محدد'}</p>
+                        </div>
+
+                        <div class="text-center">
+                            <button onclick="editProfile()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold">
+                                <i class="fas fa-edit ml-2"></i>تعديل الملف الشخصي
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                console.error('خطأ في تحميل الملف الشخصي:', error);
+                document.getElementById('profileContent').innerHTML = `
+                    <div class="text-center text-red-200">
+                        <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                        <p>حدث خطأ في تحميل الملف الشخصي</p>
+                    </div>
+                `;
+            }
+        }
+
+        function editProfile() {
+            alert('ميزة تعديل الملف الشخصي قيد التطوير');
+        }
+    </script>
+</body>
+</html>
