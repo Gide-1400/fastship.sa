@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="stylesheet" href="../shared/css/tailwind.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الرسائل - FastShip Global</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/custom.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config/supabase.js"></script>
+    <script src="assets/js/session-manager.js"></script>
+    <script src="../shared/js/enhanced-messaging.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-white mb-2">
+                        <i class="fas fa-comments mr-2"></i>الرسائل والتواصل
+                    </h1>
+                    <p class="text-gray-200">تواصل مع الناقلين والعملاء</p>
+                </div>
+                <button onclick="newMessage()" class="btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                    <i class="fas fa-plus ml-2"></i>رسالة جديدة
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="glass-card p-6">
+            <div id="messagesContainer">
+                <!-- Messages will be loaded here -->
+                <div class="text-center py-12">
+                    <i class="fas fa-envelope-open text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-300 text-lg">لا توجد رسائل حالياً</p>
+                    <p class="text-gray-400 text-sm">ستظهر هنا الرسائل من الناقلين والعملاء</p>
+                    <button onclick="newMessage()" class="mt-4 btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                        إرسال رسالة جديدة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // حماية الصفحة: فقط الناقل يدخل
+        document.addEventListener('DOMContentLoaded', async function() {
+            await window.sessionManager.init();
+            const user = window.sessionManager.getCurrentUser();
+            if (!user || (user.profile?.user_type !== 'carrier')) {
+                alert('هذه الصفحة مخصصة لأصحاب الرحلات فقط');
+                window.sessionManager.goToDashboard();
+                return;
+            }
+            console.log('✅ User authenticated as carrier:', user.email);
+            loadMessages();
+        });
+
+        async function loadMessages() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                // قراءة الرسائل من قاعدة البيانات
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .select(`
+                        *,
+                        sender:users!sender_id(full_name),
+                        receiver:users!receiver_id(full_name)
+                    `)
+                    .or(`sender_id.eq.${user.profile?.id || user.id},receiver_id.eq.${user.profile?.id || user.id}`)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const container = document.getElementById('messagesContainer');
+
+                if (data && data.length > 0) {
+                    container.innerHTML = data.map(message => `
+                        <div class="bg-white/5 rounded-lg p-4 mb-4 border border-white/10 ${!message.is_read && message.receiver_id === (user.profile?.id || user.id) ? 'border-l-4 border-l-green-400' : ''}">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-1">
+                                        <h3 class="text-white font-semibold">${message.sender?.full_name || 'مرسل غير معروف'}</h3>
+                                        ${!message.is_read && message.receiver_id === (user.profile?.id || user.id) ? '<span class="bg-green-500 text-white text-xs px-2 py-1 rounded-full mr-2">جديد</span>' : ''}
+                                    </div>
+                                    <p class="text-gray-300 font-medium text-sm">${message.subject}</p>
+                                    <p class="text-gray-400 text-sm mt-1">${message.message.length > 100 ? message.message.substring(0, 100) + '...' : message.message}</p>
+                                </div>
+                                <span class="text-gray-400 text-xs">${new Date(message.created_at).toLocaleString('ar-SA')}</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="viewMessage('${message.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-eye ml-1"></i>عرض
+                                </button>
+                                <button onclick="replyMessage('${message.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-reply ml-1"></i>رد
+                                </button>
+                                ${!message.is_read && message.receiver_id === (user.profile?.id || user.id) ? `<button onclick="markAsRead('${message.id}')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-check ml-1"></i>تحديد كمقروء
+                                </button>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = `<div class="text-center py-8 text-white/70">
+                        <i class="fas fa-envelope-open text-4xl mb-4"></i>
+                        <p>لا توجد رسائل بعد</p>
+                        <button onclick="newMessage()" class="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg">
+                            إرسال رسالة جديدة
+                        </button>
+                    </div>`;
+                }
+
+            } catch (error) {
+                console.error('خطأ في تحميل الرسائل:', error);
+                alert('حدث خطأ في تحميل الرسائل');
+            }
+        }
+
+        function newMessage() {
+            // فتح نافذة لاختيار مستلم وإرسال رسالة
+            const recipient = prompt('أدخل اسم المستلم أو اتركه فارغاً للبحث:');
+            if (recipient === null) return;
+
+            const subject = prompt('موضوع الرسالة:');
+            if (!subject) return;
+
+            const message = prompt('محتوى الرسالة:');
+            if (!message) return;
+
+            // في الواقع، يجب أن يكون هناك واجهة لاختيار المستلم من قائمة المستخدمين
+            alert('ميزة إرسال الرسائل ستكتمل قريباً - يتطلب واجهة لاختيار المستلم');
+        }
+
+        async function viewMessage(id) {
+            try {
+                // تحديث حالة الرسالة كمقروءة
+                const { error: updateError } = await supabaseClient
+                    .from('messages')
+                    .update({ is_read: true })
+                    .eq('id', id);
+
+                if (updateError) console.error('خطأ في تحديث حالة الرسالة:', updateError);
+
+                // قراءة تفاصيل الرسالة
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .select(`
+                        *,
+                        sender:users!sender_id(full_name, email),
+                        receiver:users!receiver_id(full_name, email)
+                    `)
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    alert(`من: ${data.sender?.full_name || 'غير معروف'}
+إلى: ${data.receiver?.full_name || 'غير معروف'}
+الموضوع: ${data.subject}
+
+${data.message}`);
+                    loadMessages(); // إعادة تحميل لتحديث الحالة
+                }
+            } catch (error) {
+                console.error('خطأ في عرض الرسالة:', error);
+                alert('حدث خطأ في عرض الرسالة');
+            }
+        }
+
+        async function replyMessage(id) {
+            try {
+                // قراءة الرسالة الأصلية
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .select(`
+                        *,
+                        sender:users!sender_id(full_name, email),
+                        receiver:users!receiver_id(full_name, email)
+                    `)
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    const replySubject = `Re: ${data.subject}`;
+                    const replyMessage = prompt('اكتب ردك:', `
+
+--- رد على رسالة ---
+من: ${data.sender?.full_name}
+الموضوع: ${data.subject}
+التاريخ: ${new Date(data.created_at).toLocaleString('ar-SA')}
+
+${data.message}`);
+
+                    if (replyMessage && replyMessage.trim()) {
+                        const currentUser = window.sessionManager.getCurrentUser();
+                        const senderId = currentUser.profile?.id || currentUser.id;
+                        const receiverId = data.sender_id === (currentUser.profile?.id || currentUser.id) ? data.receiver_id : data.sender_id;
+
+                        const { error: insertError } = await supabaseClient
+                            .from('messages')
+                            .insert({
+                                sender_id: senderId,
+                                receiver_id: receiverId,
+                                subject: replySubject,
+                                message: replyMessage.trim(),
+                                trip_id: data.trip_id
+                            });
+
+                        if (insertError) throw insertError;
+
+                        // Create notification for the receiver
+                        try {
+                            await window.sessionManager.createMessageNotification(
+                                'رسالة جديدة',
+                                `لديك رسالة جديدة: ${replySubject}`,
+                                data.id // Use the original message ID as related_id
+                            );
+                        } catch (notificationError) {
+                            console.error('Error creating notification:', notificationError);
+                            // Don't fail the whole operation if notification fails
+                        }
+
+                        alert('تم إرسال الرد بنجاح!');
+                        loadMessages(); // إعادة تحميل الرسائل
+                    }
+                }
+            } catch (error) {
+                console.error('خطأ في الرد على الرسالة:', error);
+                alert('حدث خطأ في إرسال الرد');
+            }
+        }
+
+        async function markAsRead(id) {
+            try {
+                const { error } = await supabaseClient
+                    .from('messages')
+                    .update({ is_read: true })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                loadMessages(); // إعادة تحميل لتحديث الحالة
+            } catch (error) {
+                console.error('خطأ في تحديث حالة الرسالة:', error);
+                alert('حدث خطأ في تحديث حالة الرسالة');
+            }
+        }
+    </script>
+</body>
+</html>
