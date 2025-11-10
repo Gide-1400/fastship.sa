@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المطابقات - صاحب الشحنات | FastShip</title>
+    <link rel="stylesheet" href="../shared/css/tailwind.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config/supabase.js"></script>
+    <script src="assets/js/session-manager.js"></script>
+    <script src="../shared/js/matcher.js"></script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .match-score {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .match-score-circle {
+            transform: rotate(-90deg);
+        }
+        
+        .score-excellent { color: #10b981; }
+        .score-good { color: #3b82f6; }
+        .score-fair { color: #f59e0b; }
+        .score-poor { color: #ef4444; }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-new {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .badge-viewed {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        
+        .badge-contacted {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state i {
+            font-size: 80px;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header-gradient text-white py-6 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button onclick="window.location.href='dashboard.html'" class="text-white hover:bg-white/20 p-2 rounded-lg transition">
+                        <i class="fas fa-arrow-right text-xl"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold">المطابقات المتاحة</h1>
+                        <p class="text-white/80 text-sm">ناقلون متطابقون مع شحناتك</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="refreshMatches()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> تحديث
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        
+        <!-- Filters -->
+        <div class="glass-card p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">اختر الشحنة</label>
+                    <select id="shipmentFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">كل الشحنات</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">نقاط المطابقة</label>
+                    <select id="scoreFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="0">الكل</option>
+                        <option value="80">ممتاز (80%+)</option>
+                        <option value="60">جيد (60%+)</option>
+                        <option value="40">مقبول (40%+)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+                    <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">الكل</option>
+                        <option value="new">جديد</option>
+                        <option value="viewed">تم المشاهدة</option>
+                        <option value="contacted">تم التواصل</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                        <i class="fas fa-filter"></i> تطبيق
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">إجمالي المطابقات</p>
+                        <p class="text-3xl font-bold text-purple-600" id="totalMatches">0</p>
+                    </div>
+                    <div class="bg-purple-100 p-4 rounded-full">
+                        <i class="fas fa-bullseye text-purple-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">مطابقات ممتازة</p>
+                        <p class="text-3xl font-bold text-green-600" id="excellentMatches">0</p>
+                    </div>
+                    <div class="bg-green-100 p-4 rounded-full">
+                        <i class="fas fa-star text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">جديدة</p>
+                        <p class="text-3xl font-bold text-blue-600" id="newMatches">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-4 rounded-full">
+                        <i class="fas fa-bell text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">تم التواصل</p>
+                        <p class="text-3xl font-bold text-orange-600" id="contactedMatches">0</p>
+                    </div>
+                    <div class="bg-orange-100 p-4 rounded-full">
+                        <i class="fas fa-comments text-orange-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matches List -->
+        <div id="matchesContainer">
+            <!-- سيتم ملؤها بالـ JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden">
+            <div class="glass-card empty-state">
+                <i class="fas fa-search"></i>
+                <h3 class="text-2xl font-bold text-gray-700 mb-2">لا توجد مطابقات حالياً</h3>
+                <p class="text-gray-600 mb-6">لم نجد أي ناقلين متطابقين مع شحناتك في الوقت الحالي</p>
+                <button onclick="window.location.href='add-shipment.html'" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                    <i class="fas fa-plus-circle ml-2"></i>
+                    أضف شحنة جديدة
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="space-y-4">
+            <div class="glass-card p-6 skeleton h-48"></div>
+            <div class="glass-card p-6 skeleton h-48"></div>
+            <div class="glass-card p-6 skeleton h-48"></div>
+        </div>
+    </main>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full p-8 relative">
+            <button onclick="closeContactModal()" class="absolute top-4 left-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">طلب تواصل مع الناقل</h2>
+            
+            <div id="modalShipmentInfo" class="bg-gray-50 p-4 rounded-lg mb-6"></div>
+            <div id="modalTripInfo" class="bg-blue-50 p-4 rounded-lg mb-6"></div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">رسالتك للناقل</label>
+                <textarea id="contactMessage" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="اكتب رسالتك هنا..."></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="sendContactRequest()" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                    <i class="fas fa-paper-plane ml-2"></i>
+                    إرسال الطلب
+                </button>
+                <button onclick="closeContactModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allMatches = [];
+        let currentMatch = null;
+        let userShipments = [];
+
+        // تحميل البيانات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadUserShipments();
+            await loadMatches();
+        });
+
+        // تحميل شحنات المستخدم
+        async function loadUserShipments() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const { data: shipper } = await window.supabaseClient
+                    .from('shippers')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .single();
+
+                const { data: shipments } = await window.supabaseClient
+                    .from('shipments')
+                    .select('*')
+                    .eq('shipper_id', shipper.id)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                userShipments = shipments || [];
+                
+                // ملء قائمة الشحنات في الفلتر
+                const shipmentFilter = document.getElementById('shipmentFilter');
+                shipments.forEach(shipment => {
+                    const option = document.createElement('option');
+                    option.value = shipment.id;
+                    option.textContent = `${shipment.title} - ${shipment.pickup_location} → ${shipment.delivery_location}`;
+                    shipmentFilter.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('خطأ في تحميل الشحنات:', error);
+            }
+        }
+
+        // تحميل المطابقات
+        async function loadMatches() {
+            try {
+                document.getElementById('loadingState').classList.remove('hidden');
+                document.getElementById('matchesContainer').innerHTML = '';
+                document.getElementById('emptyState').classList.add('hidden');
+
+                const user = window.sessionManager.getCurrentUser();
+                const { data: shipper } = await window.supabaseClient
+                    .from('shippers')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .single();
+
+                // البحث عن جميع المطابقات لشحنات المستخدم
+                const { data: matches, error } = await window.supabaseClient
+                    .from('matches')
+                    .select(`
+                        *,
+                        shipments (*),
+                        trips (
+                            *,
+                            carriers (
+                                *,
+                                users (full_name, phone)
+                            )
+                        )
+                    `)
+                    .in('shipment_id', userShipments.map(s => s.id))
+                    .neq('status', 'expired')
+                    .order('match_score', { ascending: false });
+
+                if (error) throw error;
+
+                allMatches = matches || [];
+                
+                document.getElementById('loadingState').classList.add('hidden');
+                
+                if (allMatches.length === 0) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                } else {
+                    displayMatches(allMatches);
+                    updateStats(allMatches);
+                }
+
+            } catch (error) {
+                console.error('خطأ في تحميل المطابقات:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+
+        // عرض المطابقات
+        function displayMatches(matches) {
+            const container = document.getElementById('matchesContainer');
+            container.innerHTML = '';
+
+            matches.forEach(match => {
+                const card = createMatchCard(match);
+                container.appendChild(card);
+            });
+        }
+
+        // إنشاء بطاقة مطابقة
+        function createMatchCard(match) {
+            const div = document.createElement('div');
+            div.className = 'glass-card p-6 mb-4';
+            
+            const score = match.match_score;
+            const scoreClass = score >= 80 ? 'score-excellent' : score >= 60 ? 'score-good' : score >= 40 ? 'score-fair' : 'score-poor';
+            const statusBadge = match.status === 'new' ? 'badge-new' : match.status === 'viewed' ? 'badge-viewed' : 'badge-contacted';
+            const statusText = match.status === 'new' ? 'جديد' : match.status === 'viewed' ? 'تم المشاهدة' : 'تم التواصل';
+            
+            const rating = match.trips?.carriers?.rating || 5.0;
+            const starsHtml = Array.from({length: 5}, (_, i) => 
+                `<i class="fas fa-star ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}"></i>`
+            ).join('');
+
+            div.innerHTML = `
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Match Score -->
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="match-score relative">
+                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+                                <circle class="match-score-circle ${scoreClass}" cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="8" 
+                                    stroke-dasharray="${2 * Math.PI * 45}" 
+                                    stroke-dashoffset="${2 * Math.PI * 45 * (1 - score / 100)}"
+                                    stroke-linecap="round"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                <span class="text-2xl font-bold ${scoreClass}">${score}%</span>
+                                <span class="text-xs text-gray-500">توافق</span>
+                            </div>
+                        </div>
+                        <span class="badge ${statusBadge} mt-3">${statusText}</span>
+                    </div>
+
+                    <!-- Shipment Info -->
+                    <div class="flex-1 border-r-2 border-gray-200 pr-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">${match.shipments?.title}</h3>
+                                <p class="text-sm text-gray-600">شحنتك</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-green-600"></i>
+                                <span class="font-medium">من:</span>
+                                <span class="text-gray-600">${match.shipments?.pickup_location}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-red-600"></i>
+                                <span class="font-medium">إلى:</span>
+                                <span class="text-gray-600">${match.shipments?.delivery_location}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-weight-hanging text-blue-600"></i>
+                                <span class="font-medium">الوزن:</span>
+                                <span class="text-gray-600">${match.shipments?.weight} كجم</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-calendar text-purple-600"></i>
+                                <span class="font-medium">التاريخ المفضل:</span>
+                                <span class="text-gray-600">${new Date(match.shipments?.preferred_date).toLocaleDateString('ar-SA')}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trip Info -->
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">${match.trips?.carriers?.users?.full_name || 'ناقل'}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    ${starsHtml}
+                                    <span class="text-sm text-gray-600">(${match.trips?.carriers?.total_trips || 0} رحلة)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-route text-green-600"></i>
+                                <span class="font-medium">من:</span>
+                                <span class="text-gray-600">${match.trips?.origin}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-flag-checkered text-red-600"></i>
+                                <span class="font-medium">إلى:</span>
+                                <span class="text-gray-600">${match.trips?.destination}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-truck text-blue-600"></i>
+                                <span class="font-medium">نوع المركبة:</span>
+                                <span class="text-gray-600">${getVehicleTypeArabic(match.trips?.vehicle_type)}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-box text-orange-600"></i>
+                                <span class="font-medium">السعة المتاحة:</span>
+                                <span class="text-gray-600">${match.trips?.capacity} كجم</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-calendar-day text-purple-600"></i>
+                                <span class="font-medium">تاريخ الرحلة:</span>
+                                <span class="text-gray-600">${new Date(match.trips?.travel_date).toLocaleDateString('ar-SA')}</span>
+                            </div>
+                            ${match.trips?.price_per_kg ? `
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-money-bill-wave text-green-600"></i>
+                                <span class="font-medium">السعر:</span>
+                                <span class="text-gray-600">${match.trips.price_per_kg} ريال/كجم</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Match Reasons -->
+                        ${match.match_reasons && match.match_reasons.length > 0 ? `
+                        <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                            <p class="text-sm font-medium text-blue-800 mb-2">أسباب المطابقة:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${match.match_reasons.map(reason => `
+                                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">
+                                        <i class="fas fa-check-circle mr-1"></i>${reason}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Actions -->
+                        <div class="flex gap-3">
+                            <button onclick="openContactModal('${match.id}')" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                                <i class="fas fa-comments ml-2"></i>
+                                طلب تواصل
+                            </button>
+                            ${match.trips?.carriers?.users?.phone ? `
+                            <a href="https://wa.me/${match.trips.carriers.users.phone.replace(/[^0-9]/g, '')}" target="_blank" 
+                               class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center justify-center">
+                                <i class="fab fa-whatsapp text-xl"></i>
+                            </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // تحديد المطابقة كمشاهدة عند العرض
+            if (match.status === 'new') {
+                markAsViewed(match.id);
+            }
+
+            return div;
+        }
+
+        // تحديث الإحصائيات
+        function updateStats(matches) {
+            document.getElementById('totalMatches').textContent = matches.length;
+            document.getElementById('excellentMatches').textContent = matches.filter(m => m.match_score >= 80).length;
+            document.getElementById('newMatches').textContent = matches.filter(m => m.status === 'new').length;
+            document.getElementById('contactedMatches').textContent = matches.filter(m => m.status === 'contacted').length;
+        }
+
+        // تطبيق الفلاتر
+        function applyFilters() {
+            const shipmentId = document.getElementById('shipmentFilter').value;
+            const minScore = parseInt(document.getElementById('scoreFilter').value);
+            const status = document.getElementById('statusFilter').value;
+
+            let filtered = allMatches;
+
+            if (shipmentId) {
+                filtered = filtered.filter(m => m.shipment_id === shipmentId);
+            }
+
+            if (minScore > 0) {
+                filtered = filtered.filter(m => m.match_score >= minScore);
+            }
+
+            if (status) {
+                filtered = filtered.filter(m => m.status === status);
+            }
+
+            displayMatches(filtered);
+            updateStats(filtered);
+        }
+
+        // تحديث المطابقات
+        async function refreshMatches() {
+            const btn = document.getElementById('refreshBtn');
+            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> جاري التحديث...';
+            btn.disabled = true;
+
+            // إعادة حساب المطابقات لكل شحنة
+            for (const shipment of userShipments) {
+                await window.fastShipMatcher.findAndSaveMatches(shipment, true);
+            }
+
+            await loadMatches();
+
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
+            btn.disabled = false;
+        }
+
+        // فتح نافذة طلب التواصل
+        async function openContactModal(matchId) {
+            currentMatch = allMatches.find(m => m.id === matchId);
+            if (!currentMatch) return;
+
+            document.getElementById('modalShipmentInfo').innerHTML = `
+                <h4 class="font-bold mb-2">شحنتك:</h4>
+                <p class="text-sm">${currentMatch.shipments.title}</p>
+                <p class="text-sm text-gray-600">${currentMatch.shipments.pickup_location} → ${currentMatch.shipments.delivery_location}</p>
+            `;
+
+            document.getElementById('modalTripInfo').innerHTML = `
+                <h4 class="font-bold mb-2">رحلة الناقل:</h4>
+                <p class="text-sm">${currentMatch.trips.carriers.users.full_name}</p>
+                <p class="text-sm text-gray-600">${currentMatch.trips.origin} → ${currentMatch.trips.destination}</p>
+            `;
+
+            document.getElementById('contactMessage').value = `مرحباً، أنا مهتم بنقل شحنتي معك. يمكننا مناقشة التفاصيل؟`;
+
+            document.getElementById('contactModal').classList.remove('hidden');
+        }
+
+        // إغلاق نافذة طلب التواصل
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.add('hidden');
+            currentMatch = null;
+        }
+
+        // إرسال طلب التواصل
+        async function sendContactRequest() {
+            if (!currentMatch) return;
+
+            const message = document.getElementById('contactMessage').value;
+            if (!message.trim()) {
+                alert('الرجاء كتابة رسالة');
+                return;
+            }
+
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                const { data: shipper } = await window.supabaseClient
+                    .from('shippers')
+                    .select('id')
+                    .eq('user_id', user.id)
+                    .single();
+
+                // إنشاء طلب تواصل
+                const { error } = await window.supabaseClient
+                    .from('contact_requests')
+                    .insert({
+                        shipper_id: shipper.id,
+                        carrier_id: currentMatch.trips.carrier_id,
+                        shipment_id: currentMatch.shipment_id,
+                        trip_id: currentMatch.trip_id,
+                        match_id: currentMatch.id,
+                        message: message
+                    });
+
+                if (error) throw error;
+
+                // تحديث حالة المطابقة
+                await window.fastShipMatcher.updateMatchStatus(currentMatch.id, 'contacted');
+
+                // إرسال إشعار للناقل
+                await window.supabaseClient
+                    .from('notifications')
+                    .insert({
+                        user_id: currentMatch.trips.carriers.user_id,
+                        type: 'message',
+                        title: 'طلب تواصل جديد!',
+                        message: `${user.full_name} يريد التواصل معك بخصوص شحنة`,
+                        priority: 'high',
+                        icon: 'fas fa-envelope',
+                        action_url: '/carrier-app/messages.html',
+                        action_text: 'عرض الرسالة'
+                    });
+
+                alert('✅ تم إرسال طلب التواصل بنجاح!');
+                closeContactModal();
+                await loadMatches();
+
+            } catch (error) {
+                console.error('خطأ في إرسال الطلب:', error);
+                alert('حدث خطأ في إرسال الطلب');
+            }
+        }
+
+        // تحديد المطابقة كمشاهدة
+        async function markAsViewed(matchId) {
+            try {
+                await window.fastShipMatcher.markMatchAsViewedByShipper(matchId);
+            } catch (error) {
+                console.error('خطأ في تحديث حالة المشاهدة:', error);
+            }
+        }
+
+        // دالة مساعدة لترجمة نوع المركبة
+        function getVehicleTypeArabic(type) {
+            const types = {
+                'car': 'سيارة',
+                'pickup': 'بيك أب',
+                'van': 'فان',
+                'truck': 'شاحنة',
+                'individual': 'مسافر فردي',
+                'fleet': 'أسطول',
+                'any': 'أي نوع'
+            };
+            return types[type] || type;
+        }
+    </script>
+</body>
+</html>
