@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="stylesheet" href="../shared/css/tailwind.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رحلاتي - FastShip Global</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/custom.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config/supabase.js"></script>
+    <script src="assets/js/session-manager.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0FAF74 0%, #0ba5a4 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #0FAF74, #0ba5a4);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-white mb-2">
+                        <i class="fas fa-box mr-2"></i>رحلاتي
+                    </h1>
+                    <p class="text-gray-200">إدارة وتتبع جميع رحلاتك</p>
+                </div>
+                <button onclick="window.location.href='add-trip.html'" class="btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                    <i class="fas fa-plus ml-2"></i>إضافة رحلة جديدة
+                </button>
+            </div>
+        </div>
+
+        <!-- Trips List -->
+        <div class="glass-card p-6">
+            <div id="tripsContainer">
+                <!-- Trips will be loaded here -->
+                <div class="text-center py-12">
+                    <i class="fas fa-box-open text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-300 text-lg">لا توجد رحلات حالياً</p>
+                    <p class="text-gray-400 text-sm">ابدأ بإضافة أول رحلة لك</p>
+                    <button onclick="window.location.href='add-trip.html'" class="mt-4 btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                        إضافة رحلة جديدة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // حماية الصفحة: فقط الناقل يدخل
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                await window.sessionManager.init();
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) {
+                    console.log('No user found, redirecting to login');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                console.log('Current user:', user);
+                console.log('User type:', user.profile?.user_type);
+                
+                if (user.profile?.user_type !== 'carrier') {
+                    alert('هذه الصفحة مخصصة لأصحاب الرحلات فقط');
+                    window.sessionManager.goToDashboard();
+                    return;
+                }
+                console.log('✅ User authenticated as carrier:', user.email);
+                await loadTrips();
+            } catch (error) {
+                console.error('Error initializing page:', error);
+                alert('حدث خطأ في تحميل الصفحة: ' + error.message);
+            }
+        });
+
+        async function loadTrips() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                // Ensure carrier record exists and get carrier ID
+                const carrierId = await window.sessionManager.ensureCarrierRecord();
+
+                // Now get trips using the carrier ID (exclude cancelled trips)
+                const { data, error } = await window.supabaseClient
+                    .from('trips')
+                    .select('*')
+                    .eq('carrier_id', carrierId)
+                    .not('status', 'eq', 'cancelled')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                const container = document.getElementById('tripsContainer');
+
+                if (data && data.length > 0) {
+                    container.innerHTML = data.map(trip => `
+                        <div class="bg-white/5 rounded-lg p-4 mb-4 border border-white/10">
+                            <div class="flex justify-between items-start mb-3">
+                                <div>
+                                    <h3 class="text-white font-semibold text-lg">${trip.title || 'رحلة'}</h3>
+                                    <p class="text-gray-300 text-sm">
+                                        <i class="fas fa-route ml-1"></i>
+                                        من ${trip.origin || trip.pickup_location || 'غير محدد'} إلى ${trip.destination || trip.delivery_location || 'غير محدد'}
+                                    </p>
+                                </div>
+                                <span class="bg-yellow-500 text-black text-xs px-2 py-1 rounded-full">${getStatusText(trip.status)}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-sm text-gray-400">
+                                <span><i class="fas fa-weight-hanging ml-1"></i>${trip.capacity || trip.weight || 0} كجم</span>
+                                <span><i class="fas fa-calendar ml-1"></i>${trip.travel_date ? new Date(trip.travel_date).toLocaleDateString('ar-SA') : new Date(trip.created_at).toLocaleDateString('ar-SA')}</span>
+                                <span class="text-green-300 font-semibold">${trip.price_per_kg ? trip.price_per_kg + ' ريال/كجم' : (trip.price || 'غير محدد')}</span>
+                            </div>
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="viewTrip('${trip.id}')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm" title="معرف الرحلة: ${trip.id}">
+                                    <i class="fas fa-eye ml-1"></i>تفاصيل
+                                </button>
+                                <button onclick="editTrip('${trip.id}')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm" title="معرف الرحلة: ${trip.id}">
+                                    <i class="fas fa-edit ml-1"></i>تعديل
+                                </button>
+                                <button onclick="deleteTrip('${trip.id}')" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm" title="معرف الرحلة: ${trip.id}" data-trip-id="${trip.id}">
+                                    <i class="fas fa-trash ml-1"></i>حذف
+                                </button>
+                            </div>
+                            <!-- Debug info -->
+                            <div class="text-xs text-gray-400 mt-2">معرف: ${trip.id}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('خطأ في تحميل الرحلات:', error);
+                alert('حدث خطأ في تحميل الرحلات: ' + (error.message || 'خطأ غير معروف'));
+            }
+        }
+
+        async function viewTrip(id) {
+            try {
+                // جلب تفاصيل الرحلة
+                const { data: trip, error } = await window.supabaseClient
+                    .from('trips')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                // إظهار تفاصيل الرحلة في نافذة منبثقة
+                const modalHTML = `
+                    <div id="tripDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-lg max-h-96 overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold text-gray-800">تفاصيل الرحلة</h3>
+                                <button onclick="closeModal('tripDetailsModal')" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">العنوان</label>
+                                    <p class="text-gray-900">${trip.title || 'غير محدد'}</p>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">من</label>
+                                        <p class="text-gray-900">${trip.origin || trip.pickup_location || 'غير محدد'}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">إلى</label>
+                                        <p class="text-gray-900">${trip.destination || trip.delivery_location || 'غير محدد'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">السعة المتاحة</label>
+                                        <p class="text-gray-900">${trip.capacity || trip.weight || 0} كجم</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">تاريخ السفر</label>
+                                        <p class="text-gray-900">${trip.travel_date ? new Date(trip.travel_date).toLocaleDateString('ar-SA') : 'غير محدد'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">نوع الناقل</label>
+                                        <p class="text-gray-900">${getVehicleTypeText(trip.vehicle_type)}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">السعر لكل كجم</label>
+                                        <p class="text-gray-900">${trip.price_per_kg ? trip.price_per_kg + ' ريال' : 'غير محدد'}</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">الحالة</label>
+                                    <span class="inline-block px-2 py-1 rounded-full text-sm ${getStatusStyle(trip.status)}">
+                                        ${getStatusText(trip.status)}
+                                    </span>
+                                </div>
+                                
+                                ${trip.description ? `
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">ملاحظات</label>
+                                    <p class="text-gray-900">${trip.description}</p>
+                                </div>
+                                ` : ''}
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">تاريخ الإنشاء</label>
+                                    <p class="text-gray-900">${new Date(trip.created_at).toLocaleString('ar-SA')}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-2 mt-6">
+                                <button onclick="editTrip('${trip.id}')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                                    <i class="fas fa-edit ml-1"></i>تعديل
+                                </button>
+                                <button onclick="deleteTrip('${trip.id}')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                                    <i class="fas fa-trash ml-1"></i>حذف
+                                </button>
+                                <button onclick="closeModal('tripDetailsModal')" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+                                    إغلاق
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+            } catch (error) {
+                console.error('Error viewing trip:', error);
+                alert('حدث خطأ في عرض تفاصيل الرحلة: ' + error.message);
+            }
+        }
+
+        async function editTrip(id) {
+            try {
+                // جلب تفاصيل الرحلة للتعديل
+                const { data: trip, error } = await window.supabaseClient
+                    .from('trips')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                // إنشاء نموذج التعديل
+                const editModalHTML = `
+                    <div id="editTripModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div class="bg-white rounded-lg p-6 w-full max-w-lg max-h-96 overflow-y-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-bold text-gray-800">تعديل الرحلة</h3>
+                                <button onclick="closeModal('editTripModal')" class="text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            
+                            <form onsubmit="updateTrip(event, '${trip.id}')">
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+                                        <input type="text" name="title" value="${trip.title || ''}" 
+                                               class="w-full p-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">من</label>
+                                            <input type="text" name="origin" value="${trip.origin || trip.pickup_location || ''}" 
+                                                   class="w-full p-2 border border-gray-300 rounded-lg" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">إلى</label>
+                                            <input type="text" name="destination" value="${trip.destination || trip.delivery_location || ''}" 
+                                                   class="w-full p-2 border border-gray-300 rounded-lg" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">السعة المتاحة (كجم)</label>
+                                            <input type="number" name="capacity" value="${trip.capacity || trip.weight || 0}" min="1"
+                                                   class="w-full p-2 border border-gray-300 rounded-lg" required>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">تاريخ السفر</label>
+                                            <input type="date" name="travel_date" value="${trip.travel_date || ''}" 
+                                                   class="w-full p-2 border border-gray-300 rounded-lg" required>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">نوع الناقل</label>
+                                            <select name="vehicle_type" class="w-full p-2 border border-gray-300 rounded-lg">
+                                                <option value="any" ${trip.vehicle_type === 'any' ? 'selected' : ''}>أي نوع</option>
+                                                <option value="independent" ${trip.vehicle_type === 'independent' ? 'selected' : ''}>ناقل مستقل</option>
+                                                <option value="car" ${trip.vehicle_type === 'car' ? 'selected' : ''}>سيارة</option>
+                                                <option value="truck" ${trip.vehicle_type === 'truck' ? 'selected' : ''}>شاحنة</option>
+                                                <option value="fleet" ${trip.vehicle_type === 'fleet' ? 'selected' : ''}>أسطول</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">السعر لكل كجم</label>
+                                            <input type="number" name="price_per_kg" value="${trip.price_per_kg || ''}" min="0" step="0.01"
+                                                   class="w-full p-2 border border-gray-300 rounded-lg">
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
+                                        <textarea name="description" rows="3" class="w-full p-2 border border-gray-300 rounded-lg">${trip.description || ''}</textarea>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex gap-2 mt-6">
+                                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                                        <i class="fas fa-save ml-1"></i>حفظ التعديلات
+                                    </button>
+                                    <button type="button" onclick="closeModal('editTripModal')" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded">
+                                        إلغاء
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                
+                // إغلاق النافذة السابقة إذا كانت مفتوحة
+                closeModal('tripDetailsModal');
+                
+                document.body.insertAdjacentHTML('beforeend', editModalHTML);
+                
+            } catch (error) {
+                console.error('Error loading trip for edit:', error);
+                alert('حدث خطأ في تحميل بيانات الرحلة للتعديل: ' + error.message);
+            }
+        }
+
+        async function deleteTrip(id) {
+            console.log('deleteTrip called with ID:', id, 'Type:', typeof id);
+            
+            if (!id) {
+                alert('خطأ: معرف الرحلة غير صحيح');
+                return;
+            }
+            
+            if (!confirm('هل أنت متأكد من حذف هذه الرحلة؟ لا يمكن التراجع عن هذا الإجراء.')) {
+                return;
+            }
+            
+            try {
+                // أولاً، تحقق من وجود الرحلة
+                console.log('1. Checking if trip exists...');
+                const { data: existingTrip, error: checkError } = await window.supabaseClient
+                    .from('trips')
+                    .select('id, title, carrier_id')
+                    .eq('id', id)
+                    .single();
+
+                console.log('Trip check result:', { existingTrip, checkError });
+
+                if (checkError) {
+                    if (checkError.code === 'PGRST116') {
+                        alert('الرحلة غير موجودة أو تم حذفها مسبقاً');
+                        await loadTrips(); // تحديث القائمة
+                        return;
+                    } else {
+                        throw checkError;
+                    }
+                }
+
+                if (!existingTrip) {
+                    alert('الرحلة غير موجودة');
+                    await loadTrips();
+                    return;
+                }
+
+                // التحقق من أن الرحلة تخص المستخدم الحالي
+                const user = window.sessionManager.getCurrentUser();
+                const carrierId = await window.sessionManager.ensureCarrierRecord();
+                
+                if (existingTrip.carrier_id !== carrierId) {
+                    alert('ليس لديك صلاحية لحذف هذه الرحلة');
+                    return;
+                }
+
+                console.log('2. Deleting trip...');
+                
+                // طريقة أولى: الحذف المباشر
+                const { data: deleteData, error: deleteError, count } = await window.supabaseClient
+                    .from('trips')
+                    .delete({ count: 'exact' })
+                    .eq('id', id);
+
+                console.log('Delete operation result:', { deleteData, deleteError, count });
+
+                if (deleteError) {
+                    console.error('Delete error details:', deleteError);
+                    
+                    // إذا فشل الحذف، جرب طريقة أخرى
+                    console.log('3. Trying alternative delete method...');
+                    
+                    // تحديث حالة الرحلة إلى "cancelled" بدلاً من الحذف
+                    const { data: updateData, error: updateError } = await window.supabaseClient
+                        .from('trips')
+                        .update({ 
+                            status: 'cancelled'
+                        })
+                        .eq('id', id)
+                        .select();
+
+                    if (updateError) {
+                        console.error('Update error:', updateError);
+                        throw new Error('فشل في حذف الرحلة: ' + updateError.message);
+                    }
+                    
+                    console.log('Trip marked as cancelled:', updateData);
+                    
+                } else if (count === 0) {
+                    throw new Error('لم يتم العثور على الرحلة المطلوب حذفها');
+                } else {
+                    console.log('✅ Trip deleted successfully, count:', count);
+                }
+
+                // التحقق النهائي من الحذف أو التحديث
+                console.log('4. Verifying operation...');
+                const { data: verifyData, error: verifyError } = await window.supabaseClient
+                    .from('trips')
+                    .select('id, status')
+                    .eq('id', id)
+                    .single();
+
+                console.log('Verification result:', { verifyData, verifyError });
+
+                if (verifyError && verifyError.code === 'PGRST116') {
+                    // تم الحذف بنجاح
+                    console.log('✅ Trip successfully deleted and verified');
+                    alert('تم حذف الرحلة بنجاح');
+                } else if (verifyData && verifyData.status === 'cancelled') {
+                    // تم إلغاء الرحلة بنجاح
+                    console.log('✅ Trip successfully cancelled');
+                    alert('تم إلغاء الرحلة بنجاح');
+                } else if (verifyData) {
+                    // الرحلة ما زالت موجودة وليست ملغاة
+                    console.error('Trip still exists with status:', verifyData.status);
+                    throw new Error('لم تتم العملية بنجاح');
+                } else {
+                    // خطأ آخر في التحقق
+                    console.error('Verification error:', verifyError);
+                    console.log('Assuming operation was successful due to verification error');
+                    alert('تمت العملية - يرجى تحديث الصفحة للتأكد');
+                }
+
+                // إغلاق النوافذ المنبثقة المفتوحة
+                closeModal('tripDetailsModal');
+                closeModal('editTripModal');
+                
+                // إعادة تحميل قائمة الرحلات
+                await loadTrips();
+                
+            } catch (error) {
+                console.error('Error deleting trip:', error);
+                alert('حدث خطأ في حذف الرحلة: ' + error.message);
+            }
+        }
+
+        // تحديث الرحلة
+        async function updateTrip(event, tripId) {
+            event.preventDefault();
+            
+            try {
+                const formData = new FormData(event.target);
+                
+                const updateData = {
+                    title: formData.get('title'),
+                    origin: formData.get('origin'),
+                    destination: formData.get('destination'),
+                    capacity: parseFloat(formData.get('capacity')),
+                    travel_date: formData.get('travel_date'),
+                    vehicle_type: formData.get('vehicle_type'),
+                    price_per_kg: formData.get('price_per_kg') ? parseFloat(formData.get('price_per_kg')) : null,
+                    description: formData.get('description') || null,
+                    updated_at: new Date().toISOString()
+                };
+
+                const { error } = await window.supabaseClient
+                    .from('trips')
+                    .update(updateData)
+                    .eq('id', tripId);
+
+                if (error) throw error;
+
+                alert('تم تحديث الرحلة بنجاح');
+                closeModal('editTripModal');
+                loadTrips();
+                
+            } catch (error) {
+                console.error('Error updating trip:', error);
+                alert('حدث خطأ في تحديث الرحلة: ' + error.message);
+            }
+        }
+
+        // دوال مساعدة
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function getVehicleTypeText(type) {
+            const types = {
+                'any': 'أي نوع',
+                'independent': 'ناقل مستقل',
+                'car': 'سيارة',
+                'truck': 'شاحنة',
+                'fleet': 'أسطول'
+            };
+            return types[type] || 'غير محدد';
+        }
+
+        function getStatusText(status) {
+            const statuses = {
+                'pending': 'في الانتظار',
+                'active': 'نشط',
+                'completed': 'مكتمل',
+                'cancelled': 'ملغي'
+            };
+            return statuses[status] || status;
+        }
+
+        function getStatusStyle(status) {
+            const styles = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'active': 'bg-green-100 text-green-800',
+                'completed': 'bg-blue-100 text-blue-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            return styles[status] || 'bg-gray-100 text-gray-800';
+        }
+    </script>
+</body>
+</html>
