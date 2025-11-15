@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="stylesheet" href="../shared/css/tailwind.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - صاحب الشحنات | FastShip</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config/supabase.js"></script>
+    <script src="assets/js/session-manager.js"></script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(25%, -25%);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ef4444;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .profile-dropdown {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            text-decoration: none;
+        }
+        
+        .nav-item {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .quick-action-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-action-card:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+            transform: scale(1.05);
+        }
+        
+        .progress-bar {
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 8px;
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sidebar-item {
+            color: #64748b;
+            padding: 12px 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-item:hover, .sidebar-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .welcome-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <!-- Logo & Brand -->
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <a href="shipper-home.html" class="text-2xl font-900 text-white flex items-center">
+                        <i class="fas fa-shipping-fast ml-3"></i>
+                        FastShip
+                    </a>
+                    <span class="text-white/70">|</span>
+                    <span class="text-white/90 font-semibold">لوحة التحكم</span>
+                </div>
+                
+                <!-- Navigation & User Menu -->
+                <div class="flex items-center space-x-6 space-x-reverse">
+                    <!-- Quick Navigation -->
+                    <nav class="hidden md:flex items-center space-x-4 space-x-reverse">
+                        <a href="shipper-home.html" class="nav-item">
+                            <i class="fas fa-home ml-2"></i>الرئيسية
+                        </a>
+                        <a href="shipments.html" class="nav-item">
+                            <i class="fas fa-boxes ml-2"></i>الشحنات
+                        </a>
+                        <a href="matches.html" class="nav-item">
+                            <i class="fas fa-bullseye ml-2"></i>المطابقات
+                        </a>
+                        <a href="messages.html" class="nav-item">
+                            <i class="fas fa-envelope ml-2"></i>الرسائل
+                        </a>
+                    </nav>
+                    
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" class="nav-item relative">
+                            <i class="fas fa-bell text-xl"></i>
+                            <span id="notificationBadge" class="notification-badge hidden">0</span>
+                        </button>
+                        
+                        <!-- Notifications Dropdown -->
+                        <div id="notificationsDropdown" class="absolute left-0 mt-2 w-80 profile-dropdown hidden z-50">
+                            <div class="p-4 border-b border-gray-100">
+                                <h3 class="font-bold text-gray-800">الإشعارات</h3>
+                            </div>
+                            <div id="notificationsList" class="max-h-64 overflow-y-auto">
+                                <!-- Notifications will be loaded here -->
+                            </div>
+                            <div class="p-3 border-t border-gray-100 text-center">
+                                <a href="notifications.html" class="text-blue-600 text-sm font-semibold hover:text-blue-800">
+                                    عرض جميع الإشعارات
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Profile Menu -->
+                    <div class="relative">
+                        <button onclick="toggleProfileMenu()" class="flex items-center space-x-3 space-x-reverse nav-item">
+                            <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                            <div class="text-right hidden sm:block">
+                                <div class="text-white font-semibold" id="userDisplayName">المستخدم</div>
+                                <div class="text-white/70 text-sm">صاحب شحنة</div>
+                            </div>
+                            <i class="fas fa-chevron-down text-white/70"></i>
+                        </button>
+                        
+                        <!-- Profile Dropdown -->
+                        <div id="profileDropdown" class="absolute left-0 mt-2 w-56 profile-dropdown hidden z-50">
+                            <div class="p-4 border-b border-gray-100">
+                                <div class="flex items-center space-x-3 space-x-reverse">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-white text-lg"></i>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="font-bold text-gray-800" id="dropdownUserName">المستخدم</div>
+                                        <div class="text-gray-500 text-sm" id="dropdownUserEmail">user@example.com</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="py-2">
+                                <a href="#" onclick="openProfileSettings()" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-user-edit ml-3 text-gray-400"></i>
+                                    تعديل الملف الشخصي
+                                </a>
+                                <a href="#" onclick="openAccountSettings()" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-cog ml-3 text-gray-400"></i>
+                                    إعدادات الحساب
+                                </a>
+                                <a href="#" onclick="openSecuritySettings()" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-shield-alt ml-3 text-gray-400"></i>
+                                    الأمان والخصوصية
+                                </a>
+                                <a href="#" onclick="openHelp()" class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                    <i class="fas fa-question-circle ml-3 text-gray-400"></i>
+                                    المساعدة والدعم
+                                </a>
+                                <hr class="my-2">
+                                <a href="#" onclick="logout()" class="flex items-center px-4 py-2 text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-sign-out-alt ml-3 text-red-400"></i>
+                                    تسجيل الخروج
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">مرحبا بك <span id="userName">صاحب الشحنات</span>! 👋</h1>
+            <p class="text-gray-600">إدارة شحناتك والبحث عن أفضل الناقلين</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm">الشحنات النشطة</p>
+                        <p class="text-3xl font-bold" id="activeShipments">0</p>
+                    </div>
+                    <div class="text-3xl">
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm">الشحنات المكتملة</p>
+                        <p class="text-3xl font-bold" id="completedShipments">0</p>
+                    </div>
+                    <div class="text-3xl">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm">الرسائل الجديدة</p>
+                        <p class="text-3xl font-bold" id="newMessages">0</p>
+                    </div>
+                    <div class="text-3xl">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card stat-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm">التوفير الإجمالي</p>
+                        <p class="text-3xl font-bold" id="totalSavings">0 ريال</p>
+                    </div>
+                    <div class="text-3xl">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Welcome Message -->
+        <div class="mb-8">
+            <div class="glass-card p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                            مرحباً بك، <span id="welcomeUserName">المشحن</span>! 👋
+                        </h2>
+                        <p class="text-gray-600">
+                            جاهز لإرسال شحنة جديدة؟ أو تتبع شحناتك الحالية؟
+                        </p>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-truck text-2xl text-blue-600"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div class="card p-6 lg:col-span-2">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-bolt text-blue-600 ml-2"></i>
+                    إجراءات سريعة
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="addShipment()" class="btn-primary py-4 hover:scale-105 transition-transform">
+                        <i class="fas fa-plus text-2xl mb-2"></i>
+                        <span class="block font-semibold">إضافة شحنة</span>
+                        <span class="block text-sm opacity-80">شحنة جديدة</span>
+                    </button>
+                    <button onclick="smartMatch()" class="btn-outline py-4 hover:scale-105 transition-transform">
+                        <i class="fas fa-search text-2xl mb-2"></i>
+                        <span class="block font-semibold">بحث ذكي</span>
+                        <span class="block text-sm opacity-80">عن ناقلين</span>
+                    </button>
+                    <button onclick="viewMessages()" class="btn-outline py-4 hover:scale-105 transition-transform relative">
+                        <i class="fas fa-comments text-2xl mb-2"></i>
+                        <span class="block font-semibold">الرسائل</span>
+                        <span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full mt-1 hidden" id="messagesCount">0</span>
+                        <span class="block text-sm opacity-80">رسائل جديدة</span>
+                    </button>
+                </div>
+                
+                <!-- Additional Quick Actions -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6 pt-6 border-t border-gray-200">
+                    <button onclick="window.location.href='shipments.html'" class="flex items-center justify-center p-3 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        <i class="fas fa-boxes ml-2"></i>
+                        <span class="text-sm">كل الشحنات</span>
+                    </button>
+                    <button onclick="trackShipment()" class="flex items-center justify-center p-3 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                        <i class="fas fa-map-marker-alt ml-2"></i>
+                        <span class="text-sm">تتبع شحنة</span>
+                    </button>
+                    <button onclick="generateReport()" class="flex items-center justify-center p-3 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors">
+                        <i class="fas fa-chart-bar ml-2"></i>
+                        <span class="text-sm">التقارير</span>
+                    </button>
+                    <button onclick="contactSupport()" class="flex items-center justify-center p-3 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
+                        <i class="fas fa-headset ml-2"></i>
+                        <span class="text-sm">الدعم</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-bell text-yellow-600 ml-2"></i>
+                    التنبيهات الحديثة
+                </h2>
+                <div id="dashboardNotificationsList" class="space-y-3">
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-bell-slash text-3xl mb-2"></i>
+                        <p>لا توجد تنبيهات</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity & Performance -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Recent Shipments -->
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                        <i class="fas fa-history text-green-600 ml-2"></i>
+                        الشحنات الأخيرة
+                    </h2>
+                    <button onclick="viewAllShipments()" class="text-blue-600 hover:text-blue-800 text-sm">
+                        عرض الكل <i class="fas fa-arrow-left mr-1"></i>
+                    </button>
+                </div>
+                <div id="recentShipments" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-box-open text-3xl mb-2"></i>
+                        <p>لا توجد شحنات حديثة</p>
+                        <button onclick="addShipment()" class="btn-primary mt-4">
+                            <i class="fas fa-plus ml-2"></i>إضافة شحنة جديدة
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Overview -->
+            <div class="card p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <i class="fas fa-chart-line text-purple-600 ml-2"></i>
+                    الأداء الشهري
+                </h2>
+                <div id="performanceMetrics" class="space-y-4">
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-chart-line text-3xl mb-3"></i>
+                        <p class="text-lg font-medium mb-2">ابدأ رحلتك في الشحن</p>
+                        <p class="text-sm">ستظهر هنا إحصائيات أداءك بعد إنجاز أول شحنة</p>
+                        <button onclick="addShipment()" class="btn-primary mt-4">
+                            <i class="fas fa-plus ml-2"></i>إضافة أول شحنة
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips & Recommendations -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-lightbulb text-yellow-500 ml-2"></i>
+                نصائح لتحسين الأداء
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-clock text-blue-600 ml-2"></i>
+                        <h3 class="font-semibold text-blue-800">سرعة الاستجابة</h3>
+                    </div>
+                    <p class="text-blue-700 text-sm">استجب لطلبات الناقلين خلال ساعة واحدة لزيادة فرص القبول بنسبة 40%</p>
+                </div>
+                <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-star text-green-600 ml-2"></i>
+                        <h3 class="font-semibold text-green-800">تحسين التقييم</h3>
+                    </div>
+                    <p class="text-green-700 text-sm">تأكد من تعبئة البيانات بشكل دقيق ووصف واضح للبضائع لتجنب المشاكل</p>
+                </div>
+                <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-money-bill-wave text-purple-600 ml-2"></i>
+                        <h3 class="font-semibold text-purple-800">زيادة الأرباح</h3>
+                    </div>
+                    <p class="text-purple-700 text-sm">انشر شحناتك في الأوقات المزدحمة (7-10 صباحاً، 2-5 عصراً) لضمان المشاهدة الأكبر</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Initialize session manager
+            if (window.sessionManager) {
+                await window.sessionManager.init();
+
+                if (!window.sessionManager.isLoggedIn()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const userType = window.sessionManager.getUserType();
+                if (userType !== 'shipper') {
+                    alert('هذه الصفحة مخصصة لأصحاب الشحنات فقط');
+                    window.sessionManager.goToDashboard();
+                    return;
+                }
+
+                loadUserInfo();
+                loadDashboardData();
+            }
+        });
+
+        function loadUserInfo() {
+            const user = window.sessionManager.getCurrentUser();
+            if (!user) return;
+
+            const displayName = user.profile?.full_name || user.email?.split('@')[0] || 'المستخدم';
+            const userNameEl = document.getElementById('userName');
+            if (userNameEl) {
+                userNameEl.textContent = displayName;
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                await loadStats();
+                await loadNotifications();
+                subscribeToNotifications();
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                const shipperId = await window.sessionManager.ensureShipperRecord();
+                if (!shipperId) return;
+
+                const userRecordId = user.profile?.id || null;
+
+                const setText = (id, value) => {
+                    const el = document.getElementById(id);
+                    if (el) el.textContent = value;
+                };
+
+                const { data: shipments, error: shipmentsError } = await window.supabaseClient
+                    .from('shipments')
+                    .select('id, status, price, created_at, title, pickup_location, delivery_location')
+                    .eq('shipper_id', shipperId);
+
+                if (!shipmentsError && Array.isArray(shipments)) {
+                    const activeShipments = shipments.filter(s => ['active', 'in_progress', 'matched', 'pending'].includes(s.status));
+                    const completedShipments = shipments.filter(s => s.status === 'completed');
+
+                    setText('activeShipments', activeShipments.length);
+                    setText('completedShipments', completedShipments.length);
+
+                    const totalSavingsValue = completedShipments.reduce((sum, shipment) => sum + (shipment.price || 0), 0);
+                    setText('totalSavings', totalSavingsValue > 0 ? `${totalSavingsValue.toLocaleString('ar-SA')} ريال` : '0 ريال');
+
+                    if (typeof updatePerformanceMetrics === 'function') {
+                        updatePerformanceMetrics(shipments);
+                    }
+                    if (typeof renderRecentShipments === 'function') {
+                        renderRecentShipments(shipments.slice(0, 3));
+                    }
+                }
+
+                if (userRecordId) {
+                    const { data: unreadMessages, error: messagesError } = await window.supabaseClient
+                        .from('messages')
+                        .select('id')
+                        .eq('receiver_id', userRecordId)
+                        .eq('is_read', false);
+
+                    if (!messagesError && Array.isArray(unreadMessages)) {
+                        const messageCount = unreadMessages.length;
+                        setText('newMessages', messageCount);
+
+                        const messagesCountElement = document.getElementById('messagesCount');
+                        if (messagesCountElement) {
+                            messagesCountElement.textContent = messageCount;
+                            messagesCountElement.style.display = messageCount > 0 ? 'inline' : 'none';
+                            messagesCountElement.classList.toggle('hidden', messageCount === 0);
+                        }
+                    }
+                } else {
+                    setText('newMessages', '0');
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'في الانتظار',
+                'active': 'نشط',
+                'completed': 'مكتمل',
+                'cancelled': 'ملغي'
+            };
+            return statusMap[status] || status;
+        }
+
+        async function loadNotifications() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                const receiverUserId = user.profile?.id;
+                if (!receiverUserId) return;
+
+                const { data: notifications, error } = await window.supabaseClient
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', receiverUserId)
+                    .order('created_at', { ascending: false })
+                    .limit(3);
+
+                if (error) throw error;
+
+                displayNotifications(notifications);
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        function displayNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-bell-slash text-3xl mb-2"></i>
+                        <p>لا توجد تنبيهات</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => `
+                <div class="border-b border-gray-200 pb-3 last:border-0 last:pb-0 cursor-pointer hover:bg-gray-50 transition-colors" onclick="viewNotification('${notification.id}')">
+                    <p class="text-gray-800 font-medium">${notification.title}</p>
+                    <p class="text-gray-600 text-sm">${notification.message}</p>
+                    <p class="text-gray-500 text-xs mt-1">
+                        ${notification.created_at ? new Date(notification.created_at).toLocaleDateString('ar-SA') : ''}
+                    </p>
+                </div>
+            `).join('');
+        }
+
+        // عرض تفاصيل التنبيه والتوجيه للصفحة المناسبة
+        async function viewNotification(notificationId) {
+            try {
+                // تحديث حالة التنبيه كمقروء
+                const { error: updateError } = await window.supabaseClient
+                    .from('notifications')
+                    .update({ is_read: true })
+                    .eq('id', notificationId);
+
+                if (updateError) console.error('خطأ في تحديث حالة التنبيه:', updateError);
+
+                // قراءة تفاصيل التنبيه
+                const { data, error } = await window.supabaseClient
+                    .from('notifications')
+                    .select('*')
+                    .eq('id', notificationId)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    // توجيه المستخدم إلى صفحة الرسائل حسب نوع التنبيه
+                    if (data.type === 'message' || data.type === 'new_message') {
+                        window.location.href = 'messages.html';
+                    } else if (data.action_url) {
+                        window.location.href = data.action_url;
+                    } else {
+                        // عرض تفاصيل التنبيه في alert كحل مؤقت
+                        alert(`النوع: ${data.type}
+العنوان: ${data.title}
+
+${data.message}
+
+التاريخ: ${new Date(data.created_at).toLocaleString('ar-SA')}`);
+                    }
+                    // إعادة تحميل التنبيهات لتحديث الحالة
+                    await loadNotifications();
+                }
+            } catch (error) {
+                console.error('خطأ في عرض التنبيه:', error);
+                alert('حدث خطأ في عرض التنبيه');
+            }
+        }
+
+        // الاشتراك في التحديثات المباشرة للتنبيهات
+        function subscribeToNotifications() {
+            const user = window.sessionManager.getCurrentUser();
+            if (!user?.profile?.id) return;
+
+            window.supabaseClient
+                .channel('notifications_realtime')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.profile.id}`
+                }, (payload) => {
+                    console.log('تنبيه جديد وصل:', payload.new);
+                    
+                    // إعادة تحميل التنبيهات
+                    loadNotifications();
+                    
+                    // إشعار متصفح إذا كان متاحاً
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification('تنبيه جديد في FastShip', {
+                            body: payload.new.message,
+                            icon: '/favicon.ico',
+                            tag: 'fastship-notification'
+                        });
+                    }
+                })
+                .subscribe();
+        }
+
+        // Action functions
+        function addShipment() {
+            window.location.href = 'add-shipment.html';
+        }
+
+        async function smartMatch() {
+            try {
+                // إظهار مؤشر التحميل
+                const loadingAlert = document.createElement('div');
+                loadingAlert.id = 'smartMatchModal';
+                loadingAlert.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                loadingAlert.innerHTML = `
+                    <div class="glass-card p-6 w-full max-w-md text-center">
+                        <div class="mb-4">
+                            <i class="fas fa-search text-4xl text-purple-600 animate-pulse"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">البحث الذكي عن الناقلين</h3>
+                        <p class="text-gray-600 mb-4">جاري البحث عن الناقلين المتطابقين مع شحناتك...</p>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-600 h-2 rounded-full animate-pulse" style="width: 45%"></div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(loadingAlert);
+                
+                // تهيئة matcher
+                if (!window.fastShipMatcher) {
+                    window.fastShipMatcher = new FastShipMatcherV2();
+                }
+
+                // الحصول على شحنات المستخدم
+                const shipperId = await window.sessionManager.ensureShipperRecord();
+                if (!shipperId) {
+                    showSmartMatchResults([], 'تعذر تحديد حساب الشاحن. يرجى إعادة تحميل الصفحة.');
+                    return;
+                }
+
+                const { data: shipments } = await window.supabaseClient
+                    .from('shipments')
+                    .select('*')
+                    .eq('shipper_id', shipperId)
+                    .eq('status', 'pending');
+
+                if (!shipments || shipments.length === 0) {
+                    showSmartMatchResults([], 'لا توجد شحنات معلقة للبحث عن ناقلين لها');
+                    return;
+                }
+
+                let allMatches = [];
+                
+                // البحث عن مطابقات لكل شحنة
+                for (const shipment of shipments) {
+                    const matches = await window.fastShipMatcher.findAndSaveMatches(shipment, true);
+                    allMatches = allMatches.concat(matches || []);
+                }
+
+                // ترتيب حسب النقاط
+                allMatches.sort((a, b) => b.match_score - a.match_score);
+                
+                showSmartMatchResults(allMatches.slice(0, 10)); // أفضل 10 نتائج
+
+            } catch (error) {
+                console.error('خطأ في البحث الذكي:', error);
+                closeModal('smartMatchModal');
+                alert('حدث خطأ أثناء البحث عن المطابقات');
+            }
+        }
+
+        function showSmartMatchResults(matches, message = null) {
+            closeModal('smartMatchModal');
+            
+            // إنشاء نافذة النتائج
+            const resultsModal = document.createElement('div');
+            resultsModal.id = 'smartMatchResults';
+            resultsModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            
+            let content = `
+                <div class="glass-card p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-800">
+                            <i class="fas fa-search text-purple-600 ml-2"></i>
+                            نتائج البحث الذكي
+                        </h3>
+                        <button onclick="closeModal('smartMatchResults')" class="text-gray-500 hover:text-gray-700 text-2xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+            `;
+
+            if (message) {
+                content += `
+                    <div class="text-center py-8">
+                        <i class="fas fa-info-circle text-4xl text-blue-500 mb-4"></i>
+                        <p class="text-gray-600">${message}</p>
+                        <button onclick="window.location.href='add-shipment.html'" class="mt-4 bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700">
+                            إضافة شحنة جديدة
+                        </button>
+                    </div>
+                `;
+            } else if (matches.length === 0) {
+                content += `
+                    <div class="text-center py-8">
+                        <i class="fas fa-truck text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600 mb-4">لم نجد ناقلين مطابقين حالياً</p>
+                        <p class="text-sm text-gray-500">جرب مرة أخرى لاحقاً أو عدّل تفاصيل الشحنة</p>
+                    </div>
+                `;
+            } else {
+                content += `
+                    <div class="mb-4">
+                        <span class="text-sm text-gray-600">تم العثور على ${matches.length} ناقل مطابق</span>
+                    </div>
+                    <div class="space-y-4">
+                `;
+                
+                matches.forEach(match => {
+                    const scoreColor = match.match_score >= 80 ? 'text-green-600' : match.match_score >= 60 ? 'text-blue-600' : 'text-yellow-600';
+                    content += `
+                        <div class="border rounded-lg p-4 hover:shadow-md transition">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800">${match.trips.carriers?.users?.full_name || 'ناقل'}</h4>
+                                <span class="px-3 py-1 rounded-full text-sm font-medium ${scoreColor}">
+                                    ${match.match_score}%
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">
+                                <i class="fas fa-route ml-1"></i>
+                                ${match.trips.origin} ← ${match.trips.destination}
+                            </p>
+                            <p class="text-sm text-gray-600 mb-2">
+                                <i class="fas fa-calendar ml-1"></i>
+                                ${new Date(match.trips.travel_date).toLocaleDateString('ar-SA')}
+                            </p>
+                            <p class="text-sm text-gray-600">
+                                <i class="fas fa-weight ml-1"></i>
+                                السعة: ${match.trips.capacity} كجم
+                            </p>
+                        </div>
+                    `;
+                });
+                
+                content += `
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button onclick="window.location.href='matches.html'" class="bg-purple-600 text-white px-8 py-3 rounded-lg hover:bg-purple-700 transition">
+                            عرض جميع المطابقات
+                        </button>
+                    </div>
+                `;
+            }
+            
+            content += `
+                </div>
+            `;
+            
+            resultsModal.innerHTML = content;
+            document.body.appendChild(resultsModal);
+        }
+
+        function viewMessages() {
+            window.location.href = 'messages.html';
+        }
+
+        function viewAllShipments() {
+            window.location.href = 'shipments.html';
+        }
+
+        async function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                if (window.sessionManager) {
+                    await window.sessionManager.logout();
+                }
+            }
+        }
+
+        // New enhanced functions
+        function toggleProfileMenu() {
+            const dropdown = document.getElementById('profileDropdown');
+            const notificationsDropdown = document.getElementById('notificationsDropdown');
+            
+            // Close notifications dropdown
+            notificationsDropdown.classList.add('hidden');
+            
+            // Toggle profile dropdown
+            dropdown.classList.toggle('hidden');
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationsDropdown');
+            const profileDropdown = document.getElementById('profileDropdown');
+            
+            // Close profile dropdown
+            profileDropdown.classList.add('hidden');
+            
+            // Toggle notifications dropdown
+            dropdown.classList.toggle('hidden');
+            
+            // Load notifications if opening
+            if (!dropdown.classList.contains('hidden')) {
+                loadRecentNotifications();
+            }
+        }
+
+        async function loadRecentNotifications() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                const userRecordId = user.profile?.id;
+                if (!userRecordId) return;
+
+                const { data: notifications, error } = await window.supabaseClient
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', userRecordId)
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+
+                if (error) throw error;
+
+                displayRecentNotifications(notifications);
+                updateNotificationBadge(notifications);
+
+            } catch (error) {
+                console.error('Error loading recent notifications:', error);
+            }
+        }
+
+        function displayRecentNotifications(notifications) {
+            const container = document.getElementById('notificationsList');
+
+            if (!notifications || notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="p-4 text-center text-gray-500">
+                        <i class="fas fa-bell-slash text-2xl mb-2"></i>
+                        <p class="text-sm">لا توجد إشعارات جديدة</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = notifications.map(notification => {
+                const isNew = !notification.is_read;
+                return `
+                    <div class="p-3 border-b border-gray-100 hover:bg-gray-50 ${isNew ? 'bg-blue-50' : ''} ${isNew ? 'cursor-pointer' : ''}" 
+                         ${isNew ? `onclick="markMessageAsRead('${notification.id}')"` : ''}>
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <p class="text-gray-800 font-medium text-sm">${notification.title}</p>
+                                <p class="text-gray-600 text-xs mt-1 line-clamp-2">${notification.message.substring(0, 100)}${notification.message.length > 100 ? '...' : ''}</p>
+                                <p class="text-gray-400 text-xs mt-1">
+                                    ${new Date(notification.created_at).toLocaleDateString('ar-SA')}
+                                </p>
+                                ${isNew ? '<p class="text-blue-600 text-xs mt-1">اضغط للقراءة</p>' : ''}
+                            </div>
+                            ${isNew ? '<div class="w-2 h-2 bg-blue-500 rounded-full ml-2 mt-1"></div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateNotificationBadge(notifications) {
+            const badge = document.getElementById('notificationBadge');
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function openProfileSettings() {
+            // Close dropdown
+            document.getElementById('profileDropdown').classList.add('hidden');
+            
+            // Show profile settings modal
+            showProfileModal();
+        }
+
+        function openAccountSettings() {
+            document.getElementById('profileDropdown').classList.add('hidden');
+            showAccountSettingsModal();
+        }
+
+        function openSecuritySettings() {
+            document.getElementById('profileDropdown').classList.add('hidden');
+            showSecuritySettingsModal();
+        }
+
+        function openHelp() {
+            document.getElementById('profileDropdown').classList.add('hidden');
+            showHelpModal();
+        }
+
+        function showHelpModal() {
+            const modalHTML = `
+                <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="glass-card p-6 w-full max-w-md max-h-96 overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">المساعدة والدعم</h3>
+                            <button onclick="closeModal('helpModal')" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                <h4 class="font-semibold text-blue-800 mb-2">📞 تواصل معنا</h4>
+                                <div class="space-y-2 text-sm text-blue-700">
+                                    <p><i class="fas fa-phone ml-2"></i>الهاتف: +966551519723 / +966502877332</p>
+                                    <p><i class="fas fa-envelope ml-2"></i>البريد: gide1979@gmail.com</p>
+                                    <p><i class="fas fa-clock ml-2"></i>ساعات العمل: 24/7</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <button onclick="openFAQ()" class="w-full btn-secondary text-right">
+                                    <i class="fas fa-question-circle ml-2"></i>الأسئلة الشائعة
+                                </button>
+                                <button onclick="openGuide()" class="w-full btn-secondary text-right">
+                                    <i class="fas fa-book ml-2"></i>دليل الاستخدام
+                                </button>
+                                <button onclick="reportProblem()" class="w-full btn-secondary text-right">
+                                    <i class="fas fa-bug ml-2"></i>الإبلاغ عن مشكلة
+                                </button>
+                                <button onclick="sendFeedback()" class="w-full btn-secondary text-right">
+                                    <i class="fas fa-comment ml-2"></i>إرسال ملاحظات
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function openFAQ() {
+            closeModal('helpModal');
+            alert('سيتم توجيهك لصفحة الأسئلة الشائعة');
+            // TODO: Navigate to FAQ page
+        }
+
+        function openGuide() {
+            closeModal('helpModal');
+            window.open('shipper-home.html#guide', '_blank');
+        }
+
+        function reportProblem() {
+            closeModal('helpModal');
+            const problem = prompt('صف المشكلة التي تواجهها:');
+            if (problem) {
+                alert('تم إرسال تقرير المشكلة. سيتم التواصل معك قريباً.');
+                // TODO: Send problem report
+            }
+        }
+
+        function sendFeedback() {
+            closeModal('helpModal');
+            const feedback = prompt('شاركنا ملاحظاتك واقتراحاتك:');
+            if (feedback) {
+                alert('شكراً لك! تم إرسال ملاحظاتك وسنأخذها بعين الاعتبار.');
+                // TODO: Send feedback
+            }
+        }
+
+        // Mark message as read and update counters
+        async function markMessageAsRead(messageId) {
+            try {
+                await window.supabaseClient
+                    .from('messages')
+                    .update({ is_read: true })
+                    .eq('id', messageId);
+
+                // Refresh counters
+                loadStats();
+                loadRecentNotifications();
+                
+            } catch (error) {
+                console.error('Error marking message as read:', error);
+            }
+        }
+
+        function showProfileModal() {
+            const user = window.sessionManager.getCurrentUser();
+            const modalHTML = `
+                <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="glass-card p-6 w-full max-w-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">تعديل الملف الشخصي</h3>
+                            <button onclick="closeModal('profileModal')" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <form onsubmit="updateProfile(event)">
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
+                                    <input type="text" name="fullName" value="${user.profile?.full_name || ''}" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
+                                    <input type="email" name="email" value="${user.email || ''}" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg bg-gray-100" readonly>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
+                                    <input type="tel" name="phone" value="${user.profile?.phone || ''}" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="flex space-x-3 space-x-reverse mt-6">
+                                <button type="submit" class="btn-primary flex-1">
+                                    <i class="fas fa-save ml-2"></i>حفظ التغييرات
+                                </button>
+                                <button type="button" onclick="closeModal('profileModal')" class="btn-secondary">
+                                    إلغاء
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function showAccountSettingsModal() {
+            const modalHTML = `
+                <div id="accountModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="glass-card p-6 w-full max-w-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">إعدادات الحساب</h3>
+                            <button onclick="closeModal('accountModal')" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="font-medium text-gray-800">إشعارات البريد الإلكتروني</p>
+                                    <p class="text-sm text-gray-600">تلقي إشعارات عن الشحنات الجديدة</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                    <p class="font-medium text-gray-800">إشعارات SMS</p>
+                                    <p class="text-sm text-gray-600">تلقي رسائل نصية للتحديثات المهمة</p>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <button onclick="changePassword()" class="w-full btn-secondary text-right">
+                                <i class="fas fa-key ml-2"></i>تغيير كلمة المرور
+                            </button>
+                            <button onclick="deactivateAccount()" class="w-full text-red-600 hover:text-red-800 p-3 text-right">
+                                <i class="fas fa-user-times ml-2"></i>إلغاء تفعيل الحساب
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        function showSecuritySettingsModal() {
+            const modalHTML = `
+                <div id="securityModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="glass-card p-6 w-full max-w-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">الأمان والخصوصية</h3>
+                            <button onclick="closeModal('securityModal')" class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-shield-check text-green-600 ml-2"></i>
+                                    <span class="text-green-800 font-medium">حسابك محمي</span>
+                                </div>
+                                <p class="text-green-700 text-sm mt-1">آخر تسجيل دخول: اليوم</p>
+                            </div>
+                            <button onclick="viewLoginHistory()" class="w-full btn-secondary text-right">
+                                <i class="fas fa-history ml-2"></i>سجل تسجيل الدخول
+                            </button>
+                            <button onclick="enable2FA()" class="w-full btn-secondary text-right">
+                                <i class="fas fa-mobile-alt ml-2"></i>تفعيل المصادقة الثنائية
+                            </button>
+                            <button onclick="manageDevices()" class="w-full btn-secondary text-right">
+                                <i class="fas fa-devices ml-2"></i>إدارة الأجهزة المتصلة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
+        async function updateProfile(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                const { error } = await window.supabaseClient
+                    .from('users')
+                    .update({
+                        full_name: formData.get('fullName'),
+                        phone: formData.get('phone')
+                    })
+                    .eq('auth_user_id', user.id);
+
+                if (error) throw error;
+
+                alert('تم تحديث الملف الشخصي بنجاح');
+                closeModal('profileModal');
+                
+                // Reload user info
+                await window.sessionManager.init();
+                loadUserInfo();
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('حدث خطأ أثناء تحديث الملف الشخصي');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function changePassword() {
+            alert('ستتم إعادة توجيهك لصفحة تغيير كلمة المرور');
+            // TODO: Implement password change
+        }
+
+        function deactivateAccount() {
+            if (confirm('هل أنت متأكد من رغبتك في إلغاء تفعيل الحساب؟')) {
+                alert('تم إرسال طلب إلغاء التفعيل. سيتم التواصل معك قريباً.');
+                // TODO: Implement account deactivation
+            }
+        }
+
+        function viewLoginHistory() {
+            alert('سجل تسجيل الدخول: آخر 5 مرات دخول من أجهزة مختلفة');
+            // TODO: Implement login history
+        }
+
+        function enable2FA() {
+            alert('سيتم تفعيل المصادقة الثنائية قريباً');
+            // TODO: Implement 2FA
+        }
+
+        function manageDevices() {
+            alert('إدارة الأجهزة المتصلة - قريباً');
+            // TODO: Implement device management
+        }
+
+        // Load user info in header
+        function loadUserInfo() {
+            const user = window.sessionManager.getCurrentUser();
+            if (user) {
+                const displayName = user.profile?.full_name || user.email?.split('@')[0] || 'المستخدم';
+                const email = user.email || 'user@example.com';
+                
+                document.getElementById('userName').textContent = displayName;
+                document.getElementById('userDisplayName').textContent = displayName;
+                document.getElementById('dropdownUserName').textContent = displayName;
+                document.getElementById('dropdownUserEmail').textContent = email;
+                
+                // Update welcome message
+                const welcomeElement = document.getElementById('welcomeUserName');
+                if (welcomeElement) {
+                    welcomeElement.textContent = displayName;
+                }
+            }
+        }
+
+        // Enhanced dashboard functions
+        function addShipment() {
+            window.location.href = 'add-shipment.html';
+        }
+
+        function smartMatch() {
+            // Smart matching functionality
+            window.location.href = 'matches.html';
+        }
+
+        function viewMessages() {
+            window.location.href = 'messages.html';
+        }
+
+        function viewAllShipments() {
+            window.location.href = 'shipments.html';
+        }
+
+        function trackShipment() {
+            const trackingId = prompt('أدخل رقم الشحنة للتتبع:');
+            if (trackingId) {
+                // TODO: Implement tracking
+                alert(`جاري تتبع الشحنة رقم: ${trackingId}`);
+            }
+        }
+
+        function generateReport() {
+            alert('سيتم إنشاء تقرير شامل عن أداءك قريباً');
+            // TODO: Implement report generation
+        }
+
+        function contactSupport() {
+            const supportOptions = [
+                'مشكلة في الشحنة',
+                'استفسار تقني',
+                'مشاكل في الدفع',
+                'شكوى أو اقتراح',
+                'أخرى'
+            ];
+            
+            const choice = prompt(`اختر نوع الاستفسار:\n${supportOptions.map((opt, i) => `${i+1}. ${opt}`).join('\n')}`);
+            
+            if (choice && choice >= 1 && choice <= supportOptions.length) {
+                const selectedType = supportOptions[choice - 1];
+                const message = prompt(`اكتب رسالتك حول: ${selectedType}`);
+                
+                if (message) {
+                    alert('تم إرسال رسالتك بنجاح. سيتم الرد عليك خلال 24 ساعة.');
+                    // TODO: Implement support ticket creation
+                }
+            }
+        }
+
+        // Create welcome message for new users
+        async function createWelcomeMessage() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                const receiverUserId = user.profile?.id;
+                if (!receiverUserId) {
+                    console.warn('تعذر تحديد معرف المستخدم الداخلي لإرسال رسالة الترحيب');
+                    return;
+                }
+
+                // Check if welcome message already exists for this user
+                const { data: existingMessage, error: checkError } = await window.supabaseClient
+                    .from('messages')
+                    .select('id')
+                    .eq('receiver_id', receiverUserId)
+                    .eq('message_type', 'welcome')
+                    .maybeSingle();
+
+                // If welcome message doesn't exist, create it
+                if (checkError || !existingMessage) {
+                    // استخدم معرف نظام افتراضي أو تخطي رسالة الترحيب
+                    const systemSenderId = '00000000-0000-0000-0000-000000000000'; // معرف نظام افتراضي
+                    console.log('إنشاء رسالة ترحيب للمستخدم الجديد');
+
+                    const welcomeMessage = {
+                        receiver_id: receiverUserId,
+                        sender_id: systemSenderId,
+                        subject: '🎉 مرحباً بك في FastShip!',
+                        content: `أهلاً وسهلاً بك في منصة FastShip للشحن الذكي!
+
+📋 كيف تعمل المنصة:
+• أضف تفاصيل شحنتك (المدينة، الوجهة، نوع البضائع)
+• سيتم عرض شحنتك للناقلين المهتمين
+• اختر أفضل عرض يناسب احتياجاتك
+• تابع شحنتك حتى الوصول
+
+⚠️ شروط وأحكام مهمة:
+• تأكد من دقة بيانات الشحنة
+• احرص على تغليف البضائع بشكل آمن
+• اتبع تعليمات الناقل المختار
+• تواصل بأدب واحترام مع جميع الأطراف
+
+💡 نصائح للنجاح:
+• كن واضحاً في وصف البضائع
+• رد على استفسارات الناقلين بسرعة
+• اختر الناقلين ذوي التقييم العالي
+• اترك تقييماً عادلاً بعد انتهاء الشحنة
+
+🔒 الأمان والخصوصية:
+• بياناتك محمية ومشفرة
+• لا نشارك معلوماتك مع أطراف خارجية
+• يمكنك حذف حسابك في أي وقت
+
+📞 هل تحتاج مساعدة؟
+فريق الدعم متاح 24/7 لمساعدتك
+الهاتف: +966551519723 / +966502877332
+البريد: gide1979@gmail.com
+
+نتمنى لك تجربة شحن ممتازة! 🚛`,
+                        message_type: 'welcome',
+                        folder: 'inbox',
+                        is_read: false,
+                        created_at: new Date().toISOString()
+                    };
+
+                    try {
+                        await window.supabaseClient
+                            .from('messages')
+                            .insert([welcomeMessage]);
+                        console.log('تم إنشاء رسالة الترحيب بنجاح');
+                    } catch (insertError) {
+                        console.error('فشل في إنشاء رسالة الترحيب:', insertError);
+                        // لا نتوقف، نستمر في تحميل البيانات
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating welcome message:', error);
+            }
+        }
+
+        // Load dashboard statistics
+        function renderRecentShipments(shipments) {
+            const container = document.getElementById('recentShipments');
+            if (!container) return;
+            
+            if (!shipments || shipments.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-box-open text-3xl mb-2"></i>
+                        <p>لا توجد شحنات حديثة</p>
+                        <button onclick="addShipment()" class="btn-primary mt-4">
+                            <i class="fas fa-plus ml-2"></i>إضافة شحنة جديدة
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = shipments.map(shipment => {
+                const statusColors = {
+                    'pending': 'text-yellow-600 bg-yellow-100',
+                    'active': 'text-blue-600 bg-blue-100',
+                    'in_progress': 'text-green-600 bg-green-100',
+                    'completed': 'text-gray-600 bg-gray-100'
+                };
+
+                const statusTexts = {
+                    'pending': 'قيد الانتظار',
+                    'active': 'نشطة',
+                    'in_progress': 'قيد التنفيذ',
+                    'completed': 'مكتملة'
+                };
+
+                const pickupLocation = shipment.pickup_location || shipment.pickup_city || 'غير محدد';
+                const deliveryLocation = shipment.delivery_location || shipment.delivery_city || 'غير محدد';
+                const createdAtText = shipment.created_at ? new Date(shipment.created_at).toLocaleDateString('ar-SA') : '';
+                const priceText = shipment.price ? `${shipment.price.toLocaleString('ar-SA')} ريال` : 'السعر غير محدد';
+                const weightText = shipment.weight != null ? `${shipment.weight} كجم` : null;
+
+                return `
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="font-semibold text-gray-800">${shipment.title || 'شحنة'}</h4>
+                                <span class="px-2 py-1 rounded-full text-xs font-medium ${statusColors[shipment.status] || statusColors.pending}">
+                                    ${statusTexts[shipment.status] || 'غير محدد'}
+                                </span>
+                            </div>
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-map-marker-alt ml-2"></i>
+                                <span>${pickupLocation} → ${deliveryLocation}</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-2">
+                                <span class="text-sm text-gray-500">${createdAtText}</span>
+                                <span class="font-bold text-green-600">${priceText}</span>
+                            </div>
+                            ${weightText ? `<div class="text-sm text-gray-500 mt-1"><i class="fas fa-weight-hanging ml-2"></i>${weightText}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Load notifications for dashboard
+        async function loadDashboardNotifications() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                const { data: notifications, error } = await window.supabaseClient
+                    .from('notifications')
+                    .select('*')
+                    .eq('user_id', user.profile?.id || user.id)
+                    .order('created_at', { ascending: false })
+                    .limit(3);
+
+                const container = document.getElementById('dashboardNotificationsList');
+                
+                if (error || !notifications || notifications.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-6 text-gray-500">
+                            <i class="fas fa-bell-slash text-2xl mb-2"></i>
+                            <p class="text-sm">لا توجد تنبيهات جديدة</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = notifications.map(notification => {
+                    const isNew = !notification.is_read;
+                    return `
+                        <div class="flex items-start p-3 ${isNew ? 'bg-blue-50 border border-blue-200 cursor-pointer' : 'bg-gray-50'} rounded-lg"
+                             ${isNew ? `onclick="markMessageAsRead('${notification.id}')"` : ''}>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-800 text-sm">${notification.title}</p>
+                                <p class="text-gray-600 text-xs mt-1 line-clamp-3">${notification.message.substring(0, 150)}${notification.message.length > 150 ? '...' : ''}</p>
+                                <p class="text-gray-400 text-xs mt-1">
+                                    ${new Date(notification.created_at).toLocaleDateString('ar-SA')}
+                                </p>
+                                ${isNew ? '<p class="text-blue-600 text-xs mt-1 font-medium">اضغط للقراءة كاملة</p>' : ''}
+                            </div>
+                            ${isNew ? '<div class="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1"></div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading dashboard notifications:', error);
+            }
+        }
+
+        // Update performance metrics based on real data
+        function updatePerformanceMetrics(shipments) {
+            const performanceContainer = document.getElementById('performanceMetrics');
+            
+            if (!shipments || shipments.length === 0) {
+                // Show empty state
+                performanceContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i class="fas fa-chart-line text-3xl mb-3"></i>
+                        <p class="text-lg font-medium mb-2">ابدأ رحلتك في الشحن</p>
+                        <p class="text-sm">ستظهر هنا إحصائيات أداءك بعد إنجاز أول شحنة</p>
+                        <button onclick="addShipment()" class="btn-primary mt-4">
+                            <i class="fas fa-plus ml-2"></i>إضافة أول شحنة
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Calculate real metrics
+            const completedShipments = shipments.filter(s => s.status === 'completed');
+            const totalShipments = shipments.length;
+            const completionRate = totalShipments > 0 ? Math.round((completedShipments.length / totalShipments) * 100) : 0;
+            
+            // Calculate average rating (if available)
+            const shipmentsWithRating = completedShipments.filter(s => s.rating && s.rating > 0);
+            const averageRating = shipmentsWithRating.length > 0 
+                ? (shipmentsWithRating.reduce((sum, s) => sum + s.rating, 0) / shipmentsWithRating.length).toFixed(1)
+                : 0;
+
+            // Calculate average delivery time (mock for now)
+            const averageDeliveryTime = completedShipments.length > 0 ? '2-3' : '0';
+
+            // Calculate total earnings
+            const totalEarnings = completedShipments.reduce((sum, shipment) => sum + (shipment.price || 0), 0);
+
+            // Update the performance metrics display
+            performanceContainer.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full ml-3"></div>
+                            <span class="text-gray-700">معدل إكمال الشحنات</span>
+                        </div>
+                        <span class="font-bold text-green-600">${completionRate}%</span>
+                    </div>
+                    ${averageRating > 0 ? `
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-blue-500 rounded-full ml-3"></div>
+                            <span class="text-gray-700">تقييم العملاء</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="font-bold text-blue-600 mr-2">${averageRating}</span>
+                            <div class="flex text-yellow-400">
+                                ${Array(5).fill().map((_, i) => 
+                                    `<i class="fas fa-star text-sm ${i < Math.round(averageRating) ? '' : 'text-gray-300'}"></i>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full ml-3"></div>
+                            <span class="text-gray-700">متوسط وقت التسليم</span>
+                        </div>
+                        <span class="font-bold text-yellow-600">${averageDeliveryTime} أيام</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-purple-500 rounded-full ml-3"></div>
+                            <span class="text-gray-700">إجمالي الأرباح</span>
+                        </div>
+                        <span class="font-bold text-purple-600">${totalEarnings.toLocaleString('ar-SA')} ريال</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const profileDropdown = document.getElementById('profileDropdown');
+            const notificationsDropdown = document.getElementById('notificationsDropdown');
+            
+            if (!event.target.closest('.relative')) {
+                profileDropdown.classList.add('hidden');
+                notificationsDropdown.classList.add('hidden');
+            }
+        });
+
+        // Load notifications count on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                createWelcomeMessage(); // Create welcome message for new users
+                loadRecentNotifications();
+                loadStats();
+                loadDashboardNotifications();
+            }, 2000);
+        });
+    </script>
+    
+    <style>
+        /* Switch Toggle Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #667eea;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Enhanced animations and effects */
+        .stat-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:hover, .btn-secondary:hover, .btn-outline:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Gradient animations */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .dashboard-header {
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        /* Loading animations */
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Mobile responsive enhancements */
+        @media (max-width: 768px) {
+            .glass-card {
+                margin: 0 1rem;
+                padding: 1rem;
+            }
+            
+            .stat-card {
+                padding: 1rem;
+            }
+            
+            .btn-primary, .btn-secondary, .btn-outline {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+
+        /* Text truncation utility */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .line-clamp-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+</body>
+</html>
