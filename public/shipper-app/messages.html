@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="stylesheet" href="../shared/css/tailwind.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الرسائل - FastShip Global</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/custom.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config/supabase.js"></script>
+    <script src="assets/js/session-manager.js"></script>
+    <script src="../shared/js/organized-messaging.js"></script>
+    <script src="../shared/js/enhanced-notifications-v2.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        .tab-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+        .new-message-flash {
+            animation: messageFlash 3s ease-in-out;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4) !important;
+            transform: scale(1.02);
+        }
+        @keyframes messageFlash {
+            0% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255, 107, 107, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 107, 107, 0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto p-6">
+        <!-- Header -->
+        <div class="glass-card p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-white mb-2">
+                        <i class="fas fa-comments mr-2"></i>الرسائل والتواصل
+                        <span class="text-sm bg-green-500 text-white px-2 py-1 rounded-full ml-2">
+                            <i class="fas fa-circle text-green-300 mr-1"></i>مباشر
+                        </span>
+                    </h1>
+                    <p class="text-gray-200">تواصل مع الشاحنين والعملاء - الرسائل تظهر فوراً</p>
+                </div>
+                <button onclick="newMessage()" class="btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                    <i class="fas fa-plus ml-2"></i>رسالة جديدة
+                </button>
+            </div>
+        </div>
+
+        <!-- تبديل التبويبات -->
+        <script>
+        let currentTab = 'inbox';
+        let allMessages = [];
+        let currentChatUser = null;
+
+        // تبديل التبويبات
+        function switchTab(tab) {
+            currentTab = tab;
+
+            // تحديث الأزرار
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+
+            // إدارة عرض الواجهات
+            const chatInterface = document.getElementById('chatInterface');
+            const messagesContainer = document.getElementById('messagesContainer');
+            const chatConversationsList = document.getElementById('chatConversationsList');
+
+            if (tab === 'chat') {
+                if (chatInterface) chatInterface.classList.add('hidden');
+                if (messagesContainer) messagesContainer.classList.add('hidden');
+                if (chatConversationsList) chatConversationsList.classList.remove('hidden');
+
+                // عرض قائمة المحادثات المتاحة
+                displayChatConversations();
+            } else {
+                if (chatInterface) chatInterface.classList.add('hidden');
+                if (messagesContainer) messagesContainer.classList.remove('hidden');
+                if (chatConversationsList) chatConversationsList.classList.add('hidden');
+                // عرض الرسائل المناسبة
+                displayMessages();
+            }
+        }
+        </script>
+
+        <!-- Message Tabs -->
+        <div class="glass-card p-4 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex space-x-1 space-x-reverse">
+                    <button onclick="switchTab('inbox')" id="inboxTab" class="tab-button active flex-1 py-3 px-4 rounded-lg text-center font-medium transition-all">
+                        <i class="fas fa-inbox ml-2"></i>الوارد (<span id="inboxCount">0</span>)
+                    </button>
+                    <button onclick="switchTab('sent')" id="sentTab" class="tab-button flex-1 py-3 px-4 rounded-lg text-center font-medium transition-all">
+                        <i class="fas fa-paper-plane ml-2"></i>المرسل
+                    </button>
+                    <button onclick="switchTab('chat')" id="chatTab" class="tab-button flex-1 py-3 px-4 rounded-lg text-center font-medium transition-all">
+                        <i class="fas fa-comments ml-2"></i>الدردشة
+                    </button>
+                </div>
+                <div class="flex items-center text-sm text-gray-300">
+                    <i class="fas fa-wifi text-green-400 ml-2" id="connectionStatus"></i>
+                    <span id="connectionText">متصل</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div id="chatInterface" class="glass-card p-0 mb-6 hidden">
+            <div class="flex justify-between items-center px-4 py-3 border-b border-gray-200">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-user-circle text-2xl text-green-600"></i>
+                    <div>
+                        <span id="chatUserName" class="font-bold text-lg text-white">الشاحن</span>
+                        <p id="chatUserStatus" class="text-xs text-gray-300">متصل</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="switchTab('chat')" class="text-gray-300 hover:text-blue-400 transition-colors">
+                        <i class="fas fa-plus text-lg"></i>
+                    </button>
+                    <button onclick="startVoiceCall()" class="text-gray-300 hover:text-green-400 transition-colors">
+                        <i class="fas fa-phone text-lg"></i>
+                    </button>
+                    <button onclick="startVideoCall()" class="text-gray-300 hover:text-green-400 transition-colors">
+                        <i class="fas fa-video text-lg"></i>
+                    </button>
+                    <button onclick="closeChatInterface()" class="text-gray-300 hover:text-red-400 transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="chatMessages" class="p-4 h-96 overflow-y-auto bg-white/10">
+                <!-- Messages will be loaded here -->
+            </div>
+
+            <div class="px-4 py-3 border-t border-gray-200 bg-white/10">
+                <form id="chatForm" class="flex items-center gap-2">
+                    <button type="button" onclick="attachFile()" class="text-gray-300 hover:text-green-400 transition-colors">
+                        <i class="fas fa-paperclip text-lg"></i>
+                    </button>
+                    <button type="button" onclick="insertEmoji()" class="text-gray-300 hover:text-green-400 transition-colors">
+                        <i class="fas fa-smile text-lg"></i>
+                    </button>
+                    <input id="chatInput" type="text" class="flex-1 rounded-lg border border-gray-300 px-3 py-2 bg-white/20 text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-400" placeholder="اكتب رسالتك..." autocomplete="off" required />
+                    <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-white font-semibold">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="glass-card p-6">
+            <div id="messagesContainer">
+                <!-- Messages will be loaded here -->
+                <div class="text-center py-12">
+                    <i class="fas fa-envelope-open text-4xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-300 text-lg">لا توجد رسائل حالياً</p>
+                    <p class="text-gray-400 text-sm">ستظهر هنا الرسائل من الشاحنين والعملاء</p>
+                    <button onclick="newMessage()" class="mt-4 btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                        إرسال رسالة جديدة
+                    </button>
+                </div>
+            </div>
+            <!-- Chat Conversations List (Hidden by default) -->
+            <div id="chatConversationsList" class="hidden p-4 space-y-3 bg-white/10 rounded-lg">
+                <!-- Chat conversations will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // حماية الصفحة: فقط الشاحن يدخل
+        document.addEventListener('DOMContentLoaded', async function() {
+            await window.sessionManager.init();
+            const user = window.sessionManager.getCurrentUser();
+            if (!user || (user.profile?.user_type !== 'shipper')) {
+                alert('هذه الصفحة مخصصة لأصحاب الشحنات فقط');
+                window.sessionManager.goToDashboard();
+                return;
+            }
+            console.log('✅ User authenticated as shipper:', user.email);
+            
+            // طلب إذن الإشعارات
+            requestNotificationPermission();
+            
+            loadMessages();
+            openNewChatFromSearch();
+        });
+
+        // عرض قائمة المحادثات المتاحة في تبويب الدردشة
+        function displayChatConversations() {
+            const user = window.sessionManager.getCurrentUser();
+            if (!user?.profile?.id) {
+                console.log('⚠️ انتظار بيانات المستخدم في displayChatConversations');
+                return;
+            }
+
+            const userId = user.profile.id;
+            console.log('💬 عرض المحادثات المتاحة للمستخدم:', userId);
+
+            // الحصول على جميع المحادثات الفريدة
+            const conversations = new Map();
+
+            allMessages.forEach(message => {
+                const otherUserId = message.sender_id === userId ? message.receiver_id : message.sender_id;
+                const otherUser = message.sender_id === userId ? message.receiver : message.sender;
+
+                if (!conversations.has(otherUserId)) {
+                    conversations.set(otherUserId, {
+                        userId: otherUserId,
+                        user: otherUser,
+                        lastMessage: message,
+                        unreadCount: 0
+                    });
+                }
+
+                // عد الرسائل غير المقروءة
+                if (message.receiver_id === userId && !message.is_read) {
+                    conversations.get(otherUserId).unreadCount++;
+                }
+
+                // تحديث آخر رسالة
+                if (new Date(message.created_at) > new Date(conversations.get(otherUserId).lastMessage.created_at)) {
+                    conversations.get(otherUserId).lastMessage = message;
+                }
+            });
+
+            const chatList = document.getElementById('chatConversationsList');
+            if (!chatList) return;
+
+            if (conversations.size === 0) {
+                chatList.innerHTML = '<div class="text-center py-8 text-gray-500">' +
+                    '<i class="fas fa-comments text-4xl mb-4"></i>' +
+                    '<p>لا توجد محادثات متاحة</p>' +
+                    '<p class="text-sm">ابدأ محادثة من صفحة المطابقات</p>' +
+                    '</div>';
+                return;
+            }
+
+            chatList.innerHTML = Array.from(conversations.values())
+                .sort((a, b) => new Date(b.lastMessage.created_at) - new Date(a.lastMessage.created_at))
+                .map(conv => {
+                    return '<div class="border-b border-gray-200 pb-3 mb-3 last:border-0 last:pb-0 last:mb-0 cursor-pointer hover:bg-gray-50 transition-colors" onclick="openChatInterface(\'' + (conv.user?.full_name || 'مستخدم') + '\', \'' + conv.userId + '\', \'' + (conv.lastMessage?.shipment_id || '') + '\')">'
+                        + '<div class="flex items-center justify-between">'
+                        + '<div class="flex items-center">'
+                        + '<div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center ml-3">'
+                        + '<i class="fas fa-user text-white"></i>'
+                        + '</div>'
+                        + '<div class="flex-1">'
+                        + '<h4 class="font-semibold text-gray-800">' + (conv.user?.full_name || 'مستخدم') + '</h4>'
+                        + '<p class="text-sm text-gray-600 truncate">' + (conv.lastMessage?.content || '') + '</p>'
+                        + '</div>'
+                        + '</div>'
+                        + '<div class="text-left">'
+                        + '<p class="text-xs text-gray-500">' + new Date(conv.lastMessage?.created_at).toLocaleDateString('ar-SA') + '</p>'
+                        + (conv.unreadCount > 0 ? '<span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full">' + conv.unreadCount + '</span>' : '')
+                        + '</div>'
+                        + '</div>'
+                        + '</div>';
+                }).join('');
+        }
+
+        // طلب إذن الإشعارات من المتصفح
+        async function requestNotificationPermission() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                console.log('إذن الإشعارات:', permission);
+                
+                if (permission === 'granted') {
+                    console.log('✅ تم تفعيل إشعارات المتصفح');
+                } else {
+                    console.log('❌ تم رفض إشعارات المتصفح');
+                }
+            }
+        }
+
+        // فتح واجهة الدردشة عند الوصول من صفحة المطابقات
+        function openNewChatFromSearch() {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const newChat = urlParams.get('newChat');
+                    
+                    if (newChat === 'true') {
+                        const shipmentId = urlParams.get('shipmentId');
+                        const carrierName = urlParams.get('carrierName');
+                        const carrierUserId = urlParams.get('carrierUserId');
+                        
+                        if (shipmentId && carrierName && carrierUserId) {
+                            openChatInterface(carrierName, carrierUserId, shipmentId);
+                        }
+                    }
+                });
+            } else {
+                const urlParams = new URLSearchParams(window.location.search);
+                const newChat = urlParams.get('newChat');
+                
+                if (newChat === 'true') {
+                    const shipmentId = urlParams.get('shipmentId');
+                    const carrierName = urlParams.get('carrierName');
+                    const carrierUserId = urlParams.get('carrierUserId');
+                    
+                    if (shipmentId && carrierName && carrierUserId) {
+                        openChatInterface(carrierName, carrierUserId, shipmentId);
+                    }
+                }
+            }
+        }
+
+        // استدعاء فتح الدردشة عند تحميل الصفحة
+        openNewChatFromSearch();
+
+        // إزالة الاشتراك عند مغادرة الصفحة
+        window.addEventListener('beforeunload', function() {
+            if (window.messagesSubscription) {
+                window.messagesSubscription.unsubscribe();
+                console.log('تم إلغاء اشتراك الرسائل');
+            }
+        });
+
+        async function loadMessages() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) return;
+
+                console.log('تحميل الرسائل للمستخدم:', user.profile?.id || user.id);
+
+                // التأكد من وجود معرف المستخدم الصحيح
+                const userId = user.profile?.id;
+                if (!userId) {
+                    console.error('❌ لا يمكن تحديد معرف الملف الشخصي للمستخدم');
+                    return;
+                }
+
+                // قراءة الرسائل من قاعدة البيانات باستخدام العلاقات
+                console.log('🔄 تحميل الرسائل باستخدام العلاقات...');
+
+                const { data: messagesData, error: messagesError } = await window.supabaseClient
+                    .from('messages')
+                    .select(`
+                        *,
+                        sender:users!sender_id(id, full_name, email, user_type),
+                        receiver:users!receiver_id(id, full_name, email, user_type)
+                    `)
+                    .or('sender_id.eq.' + userId + ',receiver_id.eq.' + userId)
+                    .order('created_at', { ascending: false });
+
+                if (messagesError) {
+                    console.error('❌ خطأ في تحميل الرسائل:', messagesError);
+                    allMessages = [];
+                    alert('حدث خطأ في تحميل الرسائل: ' + messagesError.message);
+                    return;
+                }
+
+                console.log('✅ تم تحميل', messagesData?.length || 0, 'رسالة');
+                allMessages = messagesData || [];
+                
+                displayMessages();
+                displayChatConversations();
+                updateCounts();
+
+                // الاشتراك في التحديثات المباشرة للرسائل
+                subscribeToRealTimeMessages();
+
+            } catch (error) {
+                console.error('خطأ في تحميل الرسائل:', error);
+                alert('حدث خطأ في تحميل الرسائل: ' + error.message);
+            }
+        }
+
+        // الاشتراك في الرسائل الجديدة في الوقت الحقيقي
+        function subscribeToRealTimeMessages() {
+            const user = window.sessionManager.getCurrentUser();
+            if (!user?.profile?.id) return;
+
+            const userId = user.profile.id;
+
+            // إلغاء الاشتراك السابق إذا كان موجوداً
+            if (window.messagesSubscription) {
+                window.messagesSubscription.unsubscribe();
+            }
+
+            // الاشتراك في الرسائل الجديدة
+            window.messagesSubscription = window.supabaseClient
+                .channel('messages_realtime')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: 'receiver_id=eq.' + userId
+                }, (payload) => {
+                    console.log('رسالة جديدة وصلت:', payload.new);
+                    
+                    // إضافة الرسالة الجديدة للقائمة المحلية
+                    allMessages.unshift(payload.new);
+                    
+                    // تحديث الواجهة
+                    displayMessages();
+                    updateCounts();
+                    
+                    // إشعار صوتي إذا كان متاحاً
+                    if ('Notification' in window && Notification.permission === 'granted') {
+                        new Notification('رسالة جديدة في FastShip', {
+                            body: 'من: ' + (payload.new.sender?.full_name || 'مرسل جديد'),
+                            icon: '/favicon.ico',
+                            tag: 'fastship-message'
+                        });
+                    }
+                    
+                    // تشغيل صوت إشعار إذا كان متاحاً
+                    playNotificationSound();
+                    
+                    // إضافة تأثير بصري للرسالة الجديدة
+                    highlightNewMessage(payload.new.id);
+                })
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: 'sender_id=eq.' + userId + ',receiver_id=eq.' + userId
+                }, (payload) => {
+                    console.log('رسالة تم تحديثها:', payload.new);
+                    
+                    // تحديث الرسالة في القائمة المحلية
+                    const index = allMessages.findIndex(msg => msg.id === payload.new.id);
+                    if (index !== -1) {
+                        allMessages[index] = payload.new;
+                        displayMessages();
+                        updateCounts();
+                    }
+                })
+                .subscribe((status) => {
+                    console.log('حالة اشتراك الرسائل:', status);
+                    updateConnectionStatus(status);
+                });
+        }
+
+        // تشغيل صوت إشعار
+        function playNotificationSound() {
+            try {
+                // إنشاء صوت بسيط للإشعار
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (error) {
+                console.log('تعذر تشغيل الصوت:', error);
+            }
+        }
+
+        // إبراز الرسالة الجديدة بصرياً
+        function highlightNewMessage(messageId) {
+            setTimeout(() => {
+                const messageElement = document.querySelector('[data-message-id="' + messageId + '"]');
+                if (messageElement) {
+                    messageElement.classList.add('new-message-flash');
+                    setTimeout(() => {
+                        messageElement.classList.remove('new-message-flash');
+                    }, 3000);
+                }
+            }, 100);
+        }
+
+        // تحديث حالة الاتصال
+        function updateConnectionStatus(status) {
+            const statusIcon = document.getElementById('connectionStatus');
+            const statusText = document.getElementById('connectionText');
+            
+            switch (status) {
+                case 'SUBSCRIBED':
+                    statusIcon.className = 'fas fa-wifi text-green-400 ml-2';
+                    statusText.textContent = 'متصل';
+                    statusText.className = 'text-green-400';
+                    break;
+                case 'CHANNEL_ERROR':
+                    statusIcon.className = 'fas fa-exclamation-triangle text-red-400 ml-2';
+                    statusText.textContent = 'خطأ في الاتصال';
+                    statusText.className = 'text-red-400';
+                    break;
+                case 'TIMED_OUT':
+                    statusIcon.className = 'fas fa-clock text-yellow-400 ml-2';
+                    statusText.textContent = 'انتهت المهلة';
+                    statusText.className = 'text-yellow-400';
+                    break;
+                case 'CLOSED':
+                    statusIcon.className = 'fas fa-times text-gray-400 ml-2';
+                    statusText.textContent = 'غير متصل';
+                    statusText.className = 'text-gray-400';
+                    break;
+                default:
+                    statusIcon.className = 'fas fa-spinner fa-spin text-blue-400 ml-2';
+                    statusText.textContent = 'جاري الاتصال...';
+                    statusText.className = 'text-blue-400';
+            }
+        }
+
+        // عرض الرسائل حسب التبويب الحالي
+        function displayMessages() {
+            const user = window.sessionManager.getCurrentUser();
+            if (!user) return;
+
+            const userId = user.profile?.id || user.id;
+            let filteredMessages = [];
+
+            switch (currentTab) {
+                case 'inbox':
+                    // الرسائل الواردة (التي أنا المستلم)
+                    filteredMessages = allMessages.filter(msg => msg.receiver_id === userId);
+                    break;
+                case 'sent':
+                    // الرسائل المرسلة (التي أنا المرسل)
+                    filteredMessages = allMessages.filter(msg => msg.sender_id === userId);
+                    break;
+                case 'chat':
+                    // جميع الرسائل للدردشة
+                    filteredMessages = allMessages;
+                    break;
+            }
+
+            const container = document.getElementById('messagesContainer');
+
+            if (filteredMessages.length > 0) {
+                container.innerHTML = filteredMessages.map(message => {
+                    const isIncoming = message.receiver_id === userId;
+                    const otherParty = isIncoming ? message.sender : message.receiver;
+                    const isUnread = !message.is_read && isIncoming;
+                    
+                    return '<div class="bg-white/5 rounded-lg p-4 mb-4 border border-white/10 ' + (isUnread ? 'border-l-4 border-l-blue-400 bg-blue-500/10' : '') + '" data-message-id="' + message.id + '">' +
+                            '<div class="flex justify-between items-start mb-3">' +
+                                '<div class="flex-1">' +
+                                    '<div class="flex items-center mb-1">' +
+                                        '<h3 class="text-white font-semibold">' +
+                                            (isIncoming ? 'من: ' : 'إلى: ') + (otherParty?.full_name || 'مستخدم غير معروف') +
+                                            (otherParty?.user_type === 'carrier' ? '<span class="text-xs bg-green-500 text-white px-2 py-1 rounded-full mr-2">ناقل</span>' :
+                                              otherParty?.user_type === 'shipper' ? '<span class="text-xs bg-blue-500 text-white px-2 py-1 rounded-full mr-2">شاحن</span>' : '') +
+                                        '</h3>' +
+                                        (isUnread ? '<span class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full mr-2">جديد</span>' : '') +
+                                    '</div>' +
+                                    '<p class="text-gray-300 font-medium text-sm">' + (message.subject || 'بدون موضوع') + '</p>' +
+                                    '<p class="text-gray-400 text-sm mt-1">' + ((message.content || '').length > 100 ? (message.content || '').substring(0, 100) + '...' : (message.content || '')) + '</p>' +
+                                    (message.message_type ? '<p class="text-xs text-yellow-400 mt-1"><i class="fas fa-tag ml-1"></i>' + (message.message_type === 'match_offer' ? 'عرض نقل' : message.message_type) + '</p>' : '') +
+                                '</div>' +
+                                '<span class="text-gray-400 text-xs">' + new Date(message.created_at).toLocaleString('ar-SA') + '</span>' +
+                            '</div>' +
+                            '<div class="flex gap-2">' +
+                                '<button onclick="viewMessage(\'' + message.id + '\')" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">' +
+                                    '<i class="fas fa-eye ml-1"></i>عرض' +
+                                '</button>' +
+                                '<button onclick="replyMessage(\'' + message.id + '\')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">' +
+                                    '<i class="fas fa-reply ml-1"></i>رد' +
+                                '</button>' +
+                                (isUnread ? '<button onclick="markAsRead(\'' + message.id + '\')" class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-sm">' +
+                                    '<i class="fas fa-check ml-1"></i>تحديد كمقروء' +
+                                '</button>' : '') +
+                            '</div>' +
+                        '</div>';
+                }).join('');
+            } else {
+                const emptyMessages = {
+                    'inbox': 'لا توجد رسائل واردة',
+                    'sent': 'لم ترسل أي رسائل بعد',
+                    'chat': 'لا توجد رسائل في الدردشة'
+                };
+                
+                container.innerHTML = '<div class="text-center py-8 text-white/70">' +
+                    '<i class="fas fa-envelope-open text-4xl mb-4"></i>' +
+                    '<p>' + emptyMessages[currentTab] + '</p>' +
+                    (currentTab === 'sent' ? '<button onclick="newMessage()" class="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">إرسال رسالة جديدة</button>' : '') +
+                '</div>';
+            }
+        }
+
+        // تحديث عدادات التبويبات
+        function updateCounts() {
+            const user = window.sessionManager.getCurrentUser();
+            if (!user) return;
+
+            const userId = user.profile?.id || user.id;
+            
+            const inboxCount = allMessages.filter(msg => msg.receiver_id === userId && !msg.is_read).length;
+            document.getElementById('inboxCount').textContent = inboxCount;
+        }
+
+        function newMessage() {
+            // فتح نافذة لاختيار مستلم وإرسال رسالة
+            const recipient = prompt('أدخل اسم المستلم أو اتركه فارغاً للبحث:');
+            if (recipient === null) return;
+
+            const subject = prompt('موضوع الرسالة:');
+            if (!subject) return;
+
+            const message = prompt('محتوى الرسالة:');
+            if (!message) return;
+
+            // في الواقع، يجب أن يكون هناك واجهة لاختيار المستلم من قائمة المستخدمين
+            alert('ميزة إرسال الرسائل ستكتمل قريباً - يتطلب واجهة لاختيار المستلم');
+        }
+
+        async function viewMessage(id) {
+            try {
+                // تحديث حالة الرسالة كمقروءة
+                const { error: updateError } = await supabaseClient
+                    .from('messages')
+                    .update({ is_read: true })
+                    .eq('id', id);
+
+                if (updateError) console.error('خطأ في تحديث حالة الرسالة:', updateError);
+
+                // قراءة تفاصيل الرسالة
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .select('*, sender:users!sender_id(full_name, email), receiver:users!receiver_id(full_name, email)')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    alert('من: ' + (data.sender?.full_name || 'غير معروف') + '\n' +
+'إلى: ' + (data.receiver?.full_name || 'غير معروف') + '\n' +
+'الموضوع: ' + (data.subject || 'بدون موضوع') + '\n\n' +
+(data.content || ''));
+                    
+                    // تحديث الرسالة كمقروءة محلياً
+                    const message = allMessages.find(msg => msg.id === id);
+                    if (message) {
+                        message.is_read = true;
+                    }
+                    
+                    displayMessages();
+                    updateCounts();
+                }
+            } catch (error) {
+                console.error('خطأ في عرض الرسالة:', error);
+                alert('حدث خطأ في عرض الرسالة');
+            }
+        }
+
+        async function replyMessage(id) {
+            try {
+                // قراءة الرسالة الأصلية
+                const { data, error } = await supabaseClient
+                    .from('messages')
+                    .select('*, sender:users!sender_id(full_name, email), receiver:users!receiver_id(full_name, email)')
+                    .eq('id', id)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    const replySubject = 'Re: ' + (data.subject || 'بدون موضوع');
+                    const replyContent = prompt('اكتب ردك:', '\n\n--- رد على رسالة ---\nمن: ' + (data.sender?.full_name) + '\nالموضوع: ' + (data.subject || 'بدون موضوع') + '\nالتاريخ: ' + new Date(data.created_at).toLocaleString('ar-SA') + '\n\n' + (data.content || ''));
+
+                    if (replyContent && replyContent.trim()) {
+                        const currentUser = window.sessionManager.getCurrentUser();
+                        const senderId = currentUser.profile?.id || currentUser.id;
+                        const receiverId = data.sender_id === (currentUser.profile?.id || currentUser.id) ? data.receiver_id : data.sender_id;
+
+                        const { error: insertError } = await supabaseClient
+                            .from('messages')
+                            .insert({
+                                sender_id: senderId,
+                                receiver_id: receiverId,
+                                subject: replySubject,
+                                content: replyContent.trim(),
+                                shipment_id: data.shipment_id
+                            });
+
+                        if (insertError) throw insertError;
+
+                        alert('تم إرسال الرد بنجاح!');
+                        loadMessages(); // إعادة تحميل الرسائل
+                    }
+                }
+            } catch (error) {
+                console.error('خطأ في الرد على الرسالة:', error);
+                alert('حدث خطأ في إرسال الرد');
+            }
+        }
+
+        async function markAsRead(id) {
+            try {
+                const { error } = await supabaseClient
+                    .from('messages')
+                    .update({ is_read: true })
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                // تحديث الرسالة محلياً
+                const message = allMessages.find(msg => msg.id === id);
+                if (message) {
+                    message.is_read = true;
+                }
+                
+                displayMessages();
+                updateCounts();
+            } catch (error) {
+                console.error('خطأ في تحديث حالة الرسالة:', error);
+                alert('حدث خطأ في تحديث حالة الرسالة');
+            }
+        }
+
+        // دوال الدردشة المباشرة
+        let currentChatShipmentId = null;
+
+        // فتح واجهة الدردشة
+        function openChatInterface(userName, userId, shipmentId = null) {
+            currentChatUser = { name: userName, userId: userId };
+            currentChatShipmentId = shipmentId;
+
+            const chatInterface = document.getElementById('chatInterface');
+            const messagesContainer = document.getElementById('messagesContainer');
+            const chatUserName = document.getElementById('chatUserName');
+
+            if (chatUserName) chatUserName.textContent = userName;
+            if (chatInterface) chatInterface.classList.remove('hidden');
+            if (messagesContainer) messagesContainer.classList.add('hidden');
+
+            // تحميل رسائل المحادثة السابقة
+            loadChatHistory(userName, shipmentId);
+
+            // الاشتراك في الرسائل الجديدة لهذه المحادثة
+            subscribeToChatMessages(userId, shipmentId);
+
+            // التركيز على حقل الإدخال
+            setTimeout(() => {
+                const chatInput = document.getElementById('chatInput');
+                if (chatInput) chatInput.focus();
+            }, 300);
+        }
+
+        // عرض واجهة اختيار المحادثة
+        function showChatSelectionInterface() {
+            const chatMessages = document.getElementById('chatMessages');
+            if (!chatMessages) return;
+
+            // إخفاء عناصر الدردشة العادية
+            const chatForm = document.getElementById('chatForm');
+            if (chatForm) chatForm.style.display = 'none';
+
+            // عرض واجهة اختيار المحادثة
+            chatMessages.innerHTML = '<div class="text-center py-12">' +
+                    '<i class="fas fa-comments text-6xl text-gray-300 mb-6"></i>' +
+                    '<h3 class="text-xl font-bold text-white mb-4">ابدأ محادثة جديدة</h3>' +
+                    '<p class="text-gray-300 mb-8">اختر ناقل من قائمة الرسائل أو ابحث عن ناقل جديد</p>' +
+                    '<div class="max-w-md mx-auto">' +
+                        '<button onclick="showRecentConversations()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg mb-4 transition">' +
+                            '<i class="fas fa-history ml-2"></i>' +
+                            'المحادثات السابقة' +
+                        '</button>' +
+                        '<button onclick="showCarrierSearch()" class="w-full bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg transition">' +
+                            '<i class="fas fa-search ml-2"></i>' +
+                            'البحث عن ناقل جديد' +
+                        '</button>' +
+                    '</div>' +
+                '</div>';
+
+            // تحديث اسم المستخدم في الهيدر
+            const chatUserName = document.getElementById('chatUserName');
+            if (chatUserName) chatUserName.textContent = 'اختر محادثة';
+
+            const chatUserStatus = document.getElementById('chatUserStatus');
+            if (chatUserStatus) chatUserStatus.textContent = '';
+        }
+
+        // عرض المحادثات السابقة
+        function showRecentConversations() {
+            const chatMessages = document.getElementById('chatMessages');
+            if (!chatMessages) return;
+
+            const user = window.sessionManager.getCurrentUser();
+            if (!user?.profile?.id) return;
+
+            // استخراج المحادثات الفريدة من الرسائل
+            const conversations = new Map();
+
+            allMessages.forEach(message => {
+                const otherUser = message.sender_id === user.profile.id ? message.receiver : message.sender;
+                if (otherUser && !conversations.has(otherUser.id)) {
+                    conversations.set(otherUser.id, {
+                        user: otherUser,
+                        lastMessage: message,
+                        shipmentId: message.trip_id
+                    });
+                }
+            });
+
+            if (conversations.size === 0) {
+                chatMessages.innerHTML = '<div class="text-center py-12">' +
+                        '<i class="fas fa-inbox text-4xl text-gray-400 mb-4"></i>' +
+                        '<p class="text-gray-300 mb-4">لا توجد محادثات سابقة</p>' +
+                        '<button onclick="showChatSelectionInterface()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">' +
+                            '<i class="fas fa-arrow-left ml-2"></i>' +
+                            'العودة' +
+                        '</button>' +
+                    '</div>';
+                return;
+            }
+
+            let conversationsHtml = '<div class="mb-4">' +
+                    '<button onclick="showChatSelectionInterface()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg mb-4">' +
+                        '<i class="fas fa-arrow-left ml-2"></i>' +
+                        'العودة' +
+                    '</button>' +
+                    '<h4 class="text-white font-bold mb-4">اختر محادثة:</h4>' +
+                '</div>' +
+                '<div class="space-y-3">';
+
+            conversations.forEach((conv, userId) => {
+                conversationsHtml += '<div onclick="startChatWithUser(\'' + conv.user.full_name + '\', \'' + userId + '\', \'' + conv.shipmentId + '\')"' +
+                         'class="bg-white/10 hover:bg-white/20 p-4 rounded-lg cursor-pointer transition border border-white/20">' +
+                        '<div class="flex items-center justify-between">' +
+                            '<div class="flex items-center">' +
+                                '<i class="fas fa-user-circle text-2xl text-green-400 ml-3"></i>' +
+                                '<div>' +
+                                    '<h5 class="text-white font-semibold">' + conv.user.full_name + '</h5>' +
+                                    '<p class="text-gray-300 text-sm">' + (conv.user.user_type === 'carrier' ? 'ناقل' : 'شاحن') + '</p>' +
+                                '</div>' +
+                            '</div>' +
+                            '<div class="text-left">' +
+                                '<p class="text-gray-400 text-xs">' + new Date(conv.lastMessage.created_at).toLocaleDateString('ar-SA') + '</p>' +
+                                '<p class="text-gray-300 text-sm truncate max-w-xs">' + (conv.lastMessage.content?.substring(0, 30) || 'رسالة') + '...</p>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>';
+            });
+
+            conversationsHtml += '</div>';
+            chatMessages.innerHTML = conversationsHtml;
+        }
+
+        // بدء دردشة مع مستخدم محدد
+        function startChatWithUser(userName, userId, shipmentId) {
+            openChatInterface(userName, userId, shipmentId);
+        }
+
+        // عرض واجهة البحث عن ناقل جديد
+        function showCarrierSearch() {
+            const chatMessages = document.getElementById('chatMessages');
+            if (!chatMessages) return;
+
+            chatMessages.innerHTML = '<div class="mb-4">' +
+                    '<button onclick="showChatSelectionInterface()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg mb-4">' +
+                        '<i class="fas fa-arrow-left ml-2"></i>' +
+                        'العودة' +
+                    '</button>' +
+                    '<h4 class="text-white font-bold mb-4">البحث عن ناقل:</h4>' +
+                '</div>' +
+                '<div class="bg-white/10 p-6 rounded-lg">' +
+                    '<div class="mb-4">' +
+                        '<input type="text" id="carrierSearchInput" placeholder="اكتب اسم الناقل أو رقمه..."' +
+                               'class="w-full px-4 py-3 bg-white/20 text-black placeholder-gray-500 rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400">' +
+                    '</div>' +
+                    '<div id="carrierSearchResults" class="space-y-2 max-h-64 overflow-y-auto">' +
+                        '<!-- نتائج البحث ستظهر هنا -->' +
+                    '</div>' +
+                    '<button onclick="searchCarriers()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg mt-4 transition">' +
+                        '<i class="fas fa-search ml-2"></i>' +
+                        'بحث' +
+                    '</button>' +
+                '</div>';
+
+            // التركيز على حقل البحث
+            setTimeout(() => {
+                const searchInput = document.getElementById('carrierSearchInput');
+                if (searchInput) {
+                    searchInput.focus();
+                    // إضافة مستمع للضغط على Enter
+                    searchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            searchCarriers();
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+        // البحث عن الناقلين
+        async function searchCarriers() {
+            const searchInput = document.getElementById('carrierSearchInput');
+            const searchTerm = searchInput.value.trim();
+
+            if (!searchTerm) {
+                alert('يرجى إدخال اسم أو رقم للبحث');
+                return;
+            }
+
+            const resultsContainer = document.getElementById('carrierSearchResults');
+            resultsContainer.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-white"></i> جاري البحث...</div>';
+
+            try {
+                // البحث عن الناقلين
+                const { data: carriers, error } = await supabaseClient
+                    .from('users')
+                    .select('id, full_name, email, phone, user_type')
+                    .eq('user_type', 'carrier')
+                    .or('full_name.ilike.%' + searchTerm + '%,phone.ilike.%' + searchTerm + '%,email.ilike.%' + searchTerm + '%')
+                    .limit(10);
+
+                if (error) throw error;
+
+                if (!carriers || carriers.length === 0) {
+                    resultsContainer.innerHTML = '<div class="text-center py-4 text-gray-300">لم يتم العثور على ناقلين مطابقين</div>';
+                    return;
+                }
+
+                let resultsHtml = '';
+                carriers.forEach(carrier => {
+                    resultsHtml += '<div onclick="startChatWithUser(\'' + carrier.full_name + '\', \'' + carrier.id + '\', null)"' +
+                             'class="bg-white/5 hover:bg-white/10 p-3 rounded-lg cursor-pointer transition border border-white/10">' +
+                            '<div class="flex items-center">' +
+                                '<i class="fas fa-user-circle text-xl text-blue-400 ml-3"></i>' +
+                                '<div>' +
+                                    '<h6 class="text-white font-medium">' + carrier.full_name + '</h6>' +
+                                    '<p class="text-gray-400 text-sm">' + carrier.email + '</p>' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>';
+                });
+
+                resultsContainer.innerHTML = resultsHtml;
+
+            } catch (error) {
+                console.error('خطأ في البحث عن الناقلين:', error);
+                resultsContainer.innerHTML = '<div class="text-center py-4 text-red-300">حدث خطأ في البحث</div>';
+            }
+        }
+
+        // فتح واجهة الدردشة عند الوصول من صفحة البحث الذكي
+        function openNewChatFromSearch() {
+            console.log('🔍 فحص URL لفتح دردشة جديدة...');
+            const urlParams = new URLSearchParams(window.location.search);
+            const newChat = urlParams.get('newChat');
+            const shipmentId = urlParams.get('shipmentId');
+            const carrierName = urlParams.get('carrierName');
+            const carrierUserId = urlParams.get('carrierUserId');
+
+            console.log('📋 معاملات URL:', { newChat, shipmentId, carrierName, carrierUserId });
+
+            if (newChat === 'true' && carrierName && carrierUserId) {
+                console.log('💬 فتح دردشة تلقائياً مع:', carrierName, carrierUserId);
+                switchTab('chat');
+                openChatInterface(carrierName, carrierUserId, null);
+            } else {
+                console.log('❌ لا توجد دردشة جديدة لفتحها');
+            }
+        }
+
+        // إغلاق واجهة الدردشة والعودة لقائمة الرسائل
+        function closeChatInterface() {
+            // إلغاء الاشتراك في الرسائل المباشرة للدردشة
+            if (window.chatSubscription) {
+                window.chatSubscription.unsubscribe();
+                window.chatSubscription = null;
+            }
+
+            document.getElementById('chatInterface').classList.add('hidden');
+            document.getElementById('messagesContainer').classList.remove('hidden');
+            currentChatUser = null;
+            currentChatShipmentId = null;
+
+            // مسح الرسائل من الواجهة
+            document.getElementById('chatMessages').innerHTML = '';
+        }
+
+        // تحميل سجل المحادثة
+        async function loadChatHistory(userName, shipmentId) {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user?.profile?.id) return;
+
+                console.log('🔍 تحميل محادثة مع:', currentChatUser, 'للشحنة:', shipmentId);
+
+                // البحث عن جميع الرسائل بين المستخدمين (بدون شرط shipment_id)
+                const { data: messages, error } = await supabaseClient
+                    .from('messages')
+                    .select(`
+                        *,
+                        sender:users!sender_id(full_name, email, user_type),
+                        receiver:users!receiver_id(full_name, email, user_type)
+                    `)
+                    .or(`and(sender_id.eq.${user.profile.id},receiver_id.eq.${currentChatUser.userId}),and(sender_id.eq.${currentChatUser.userId},receiver_id.eq.${user.profile.id})`)
+                    .order('created_at', { ascending: true });
+
+                if (error) {
+                    console.error('خطأ في استعلام المحادثة:', error);
+                    throw error;
+                }
+
+                // تصفية الرسائل لتشمل فقط المحادثات بين المستخدمين المحددين
+                const chatMessages = messages.filter(msg =>
+                    (msg.sender_id === user.profile.id && msg.receiver_id === currentChatUser.userId) ||
+                    (msg.sender_id === currentChatUser.userId && msg.receiver_id === user.profile.id)
+                );
+
+                console.log('📚 رسائل المحادثة المفلترة:', chatMessages);
+                displayChatMessages(chatMessages || []);
+
+            } catch (error) {
+                console.error('خطأ في تحميل سجل المحادثة:', error);
+            }
+        }
+
+        // عرض رسائل الدردشة
+        function displayChatMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            const user = window.sessionManager.getCurrentUser();
+            const currentUserId = user?.profile?.id;
+
+            messages.forEach(message => {
+                const isOwnMessage = message.sender_id === currentUserId;
+                const messageElement = document.createElement('div');
+                messageElement.className = isOwnMessage ? 'text-right mb-3' : 'text-left mb-3';
+
+                messageElement.innerHTML = '<div class="inline-block max-w-xs lg:max-w-md">' +
+                        '<div class="' + (isOwnMessage ? 'bg-green-500 text-white rounded-l-lg rounded-tr-lg' : 'bg-gray-200 text-gray-800 rounded-r-lg rounded-tl-lg') + ' px-4 py-2 shadow">' +
+                            '<p class="text-sm">' + message.content + '</p>' +
+                        '</div>' +
+                        '<p class="text-xs text-gray-400 mt-1">' +
+                            new Date(message.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) +
+                        '</p>' +
+                    '</div>';
+
+                container.appendChild(messageElement);
+            });
+
+            // التمرير لآخر رسالة
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // الاشتراك في رسائل الدردشة المباشرة
+        function subscribeToChatMessages(otherUserId, shipmentId) {
+            const user = window.sessionManager.getCurrentUser();
+            if (!user?.profile?.id) {
+                console.log('⚠️ انتظار بيانات المستخدم للاشتراك في الدردشة');
+                return;
+            }
+
+            // إلغاء الاشتراك السابق إذا كان موجوداً
+            if (window.chatSubscription) {
+                window.chatSubscription.unsubscribe();
+            }
+
+            const currentUserId = user.profile.id;
+            console.log('💬 الاشتراك في دردشة مباشرة مع:', otherUserId, 'للشحنة:', shipmentId);
+
+            try {
+                // الاشتراك في الرسائل الجديدة لهذه المحادثة
+                window.chatSubscription = supabaseClient
+                    .channel(`chat_${currentUserId}_${otherUserId}`)
+                    .on('postgres_changes', {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'messages',
+                        filter: `sender_id=eq.${otherUserId},receiver_id=eq.${currentUserId},message_type=eq.general`
+                    }, (payload) => {
+                        console.log('رسالة دردشة جديدة وصلت:', payload.new);
+
+                        // إضافة الرسالة الجديدة للدردشة
+                        const messageElement = document.createElement('div');
+                        messageElement.className = 'text-left mb-3'; // رسائل الآخرين من اليسار
+                        messageElement.innerHTML = '<div class="inline-block max-w-xs lg:max-w-md">' +
+                                '<div class="bg-gray-200 text-gray-800 rounded-r-lg rounded-tl-lg px-4 py-2 shadow">' +
+                                    '<p class="text-sm">' + payload.new.content + '</p>' +
+                                '</div>' +
+                                '<p class="text-xs text-gray-400 mt-1">' +
+                                    new Date(payload.new.created_at).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) +
+                                '</p>' +
+                            '</div>';
+
+                        document.getElementById('chatMessages').appendChild(messageElement);
+
+                        // التمرير لآخر رسالة
+                        const container = document.getElementById('chatMessages');
+                        container.scrollTop = container.scrollHeight;
+
+                        // تشغيل صوت إشعار
+                        playNotificationSound();
+
+                        // تحديث حالة المستخدم إلى متصل
+                        updateChatUserStatus('متصل');
+                    })
+                    .subscribe((status) => {
+                        console.log('حالة اشتراك الدردشة:', status);
+                        if (status === 'SUBSCRIBED') {
+                            updateChatUserStatus('متصل');
+                        } else if (status === 'CHANNEL_ERROR') {
+                            updateChatUserStatus('غير متصل');
+                        }
+                    });
+            } catch (error) {
+                console.error('❌ خطأ في إنشاء اشتراك الدردشة:', error);
+                updateChatUserStatus('خطأ في الاتصال');
+            }
+        }
+
+        // تحديث حالة المستخدم في الدردشة
+        function updateChatUserStatus(status) {
+            const statusElement = document.getElementById('chatUserStatus');
+            if (statusElement) {
+                statusElement.textContent = status;
+                statusElement.className = 'text-xs ' + (
+                    status === 'متصل' ? 'text-green-400' :
+                    status === 'غير متصل' ? 'text-red-400' : 'text-yellow-400'
+                );
+            }
+        }
+
+        // إرسال رسالة في الدردشة
+        async function sendChatMessage(message) {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user?.profile?.id) {
+                    alert('يجب تسجيل الدخول أولاً');
+                    return { success: false, error: 'يجب تسجيل الدخول أولاً' };
+                }
+
+                // البحث عن معرف المستخدم المستلم
+                if (!currentChatUser.userId) {
+                    alert('لا يمكن إرسال الرسالة: معرف المستخدم غير متوفر');
+                    return { success: false, error: 'معرف المستخدم غير متوفر' };
+                }
+
+                // إرسال الرسالة
+                const messageData = {
+                    sender_id: user.profile.id,
+                    receiver_id: currentChatUser.userId,
+                    subject: 'رسالة دردشة',
+                    content: message,
+                    message_type: 'general'
+                };
+
+                // إضافة shipment_id إذا كان متوفراً
+                if (currentChatShipmentId) {
+                    messageData.shipment_id = currentChatShipmentId;
+                }
+
+                const { data: newMessage, error: sendError } = await window.supabaseClient
+                    .from('messages')
+                    .insert(messageData)
+                    .select()
+                    .single();
+
+                if (sendError) throw sendError;
+
+                // عرض الرسالة فوراً
+                const messageElement = document.createElement('div');
+                messageElement.className = 'text-right mb-3';
+                messageElement.innerHTML = '<div class="inline-block max-w-xs lg:max-w-md">' +
+                        '<div class="bg-green-500 text-white rounded-l-lg rounded-tr-lg px-4 py-2 shadow">' +
+                            '<p class="text-sm">' + message + '</p>' +
+                        '</div>' +
+                        '<p class="text-xs text-gray-400 mt-1">' +
+                            new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) +
+                        '</p>' +
+                    '</div>';
+
+                document.getElementById('chatMessages').appendChild(messageElement);
+                document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+
+                // إرسال إشعار للمستلم إذا كان userId موجود وصحيح
+                console.log('🔍 فحص currentChatUser:', currentChatUser);
+                console.log('🔍 userId:', currentChatUser?.userId);
+                
+                if (currentChatUser && currentChatUser.userId && currentChatUser.userId.trim() !== '' && currentChatUser.userId !== 'undefined' && currentChatUser.userId !== 'null') {
+                    console.log('✅ userId صحيح، جاري إرسال الإشعار...');
+                    try {
+                        await window.sessionManager.createNotification(
+                            currentChatUser.userId,
+                            'message',
+                            'رسالة جديدة من الشاحن',
+                            message,
+                            currentChatShipmentId
+                        );
+                        console.log('✅ تم إرسال الإشعار بنجاح');
+                    } catch (notificationError) {
+                        console.error('❌ فشل في إرسال الإشعار:', notificationError);
+                        // لا نعرض رسالة خطأ للمستخدم لأن الرسالة تم إرسالها بنجاح
+                    }
+                } else {
+                    console.warn('⚠️ لا يمكن إرسال إشعار: userId مفقود أو فارغ', {
+                        currentChatUser: currentChatUser,
+                        userId: currentChatUser?.userId,
+                        isValid: currentChatUser?.userId?.trim() !== ''
+                    });
+                }
+
+                return { success: true };
+
+            } catch (error) {
+                console.error('خطأ في إرسال الرسالة:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // معالجة إرسال النموذج
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            input.value = '';
+            input.disabled = true;
+
+            const result = await sendChatMessage(message);
+
+            if (result.success) {
+                // تم إرسال الرسالة بنجاح
+                console.log('تم إرسال الرسالة بنجاح');
+            } else {
+                alert('فشل في إرسال الرسالة: ' + result.error);
+            }
+
+            input.disabled = false;
+            input.focus();
+        });
+
+        // دوال إضافية للدردشة
+        function startVoiceCall() {
+            alert('ميزة المكالمات الصوتية قيد التطوير');
+        }
+
+        function startVideoCall() {
+            alert('ميزة المكالمات المرئية قيد التطوير');
+        }
+
+        function attachFile() {
+            alert('ميزة إرفاق الملفات قيد التطوير');
+        }
+
+        function insertEmoji() {
+            alert('ميزة الرموز التعبيرية قيد التطوير');
+        }
+    </script>
+</body>
+</html>

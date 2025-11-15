@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المطابقات - صاحب الشحنات | FastShip</title>
+    <link rel="stylesheet" href="../shared/css/tailwind.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../config/supabase.js"></script>
+    <script src="assets/js/session-manager.js"></script>
+    <script src="../shared/js/matcher.js"></script>
+    <script src="../shared/js/organized-messaging.js"></script>
+    <script src="../shared/js/enhanced-notifications-v2.js"></script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        
+        .header-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+        
+        .match-score {
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+        
+        .match-score-circle {
+            transform: rotate(-90deg);
+        }
+        
+        .score-excellent { color: #10b981; }
+        .score-good { color: #3b82f6; }
+        .score-fair { color: #f59e0b; }
+        .score-poor { color: #ef4444; }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-new {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .badge-viewed {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+        
+        .badge-contacted {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+        
+        .rating-stars {
+            color: #fbbf24;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+        
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .empty-state i {
+            font-size: 80px;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header-gradient text-white py-6 sticky top-0 z-50">
+        <div class="container mx-auto px-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <button onclick="window.location.href='dashboard.html'" class="text-white hover:bg-white/20 p-2 rounded-lg transition">
+                        <i class="fas fa-arrow-right text-xl"></i>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl font-bold">المطابقات المتاحة</h1>
+                        <p class="text-white/80 text-sm">ناقلون متطابقون مع شحناتك</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="refreshMatches()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i> تحديث
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        
+        <!-- Filters -->
+        <div class="glass-card p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">اختر الشحنة</label>
+                    <select id="shipmentFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">كل الشحنات</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">نقاط المطابقة</label>
+                    <select id="scoreFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="0">الكل</option>
+                        <option value="80">ممتاز (80%+)</option>
+                        <option value="60">جيد (60%+)</option>
+                        <option value="40">مقبول (40%+)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">الحالة</label>
+                    <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                        <option value="">الكل</option>
+                        <option value="new">جديد</option>
+                        <option value="viewed">تم المشاهدة</option>
+                        <option value="contacted">تم التواصل</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="applyFilters()" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                        <i class="fas fa-filter"></i> تطبيق
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">إجمالي المطابقات</p>
+                        <p class="text-3xl font-bold text-purple-600" id="totalMatches">0</p>
+                    </div>
+                    <div class="bg-purple-100 p-4 rounded-full">
+                        <i class="fas fa-bullseye text-purple-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">مطابقات ممتازة</p>
+                        <p class="text-3xl font-bold text-green-600" id="excellentMatches">0</p>
+                    </div>
+                    <div class="bg-green-100 p-4 rounded-full">
+                        <i class="fas fa-star text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">جديدة</p>
+                        <p class="text-3xl font-bold text-blue-600" id="newMatches">0</p>
+                    </div>
+                    <div class="bg-blue-100 p-4 rounded-full">
+                        <i class="fas fa-bell text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="glass-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">تم التواصل</p>
+                        <p class="text-3xl font-bold text-orange-600" id="contactedMatches">0</p>
+                    </div>
+                    <div class="bg-orange-100 p-4 rounded-full">
+                        <i class="fas fa-comments text-orange-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Matches List -->
+        <div id="matchesContainer">
+            <!-- سيتم ملؤها بالـ JavaScript -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden">
+            <div class="glass-card empty-state">
+                <i class="fas fa-search"></i>
+                <h3 class="text-2xl font-bold text-gray-700 mb-2">لا توجد مطابقات حالياً</h3>
+                <p class="text-gray-600 mb-6">لم نجد أي ناقلين متطابقين مع شحناتك في الوقت الحالي</p>
+                <button onclick="window.location.href='add-shipment.html'" class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                    <i class="fas fa-plus-circle ml-2"></i>
+                    أضف شحنة جديدة
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="space-y-4">
+            <div class="glass-card p-6 skeleton h-48"></div>
+            <div class="glass-card p-6 skeleton h-48"></div>
+            <div class="glass-card p-6 skeleton h-48"></div>
+        </div>
+    </main>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full p-8 relative">
+            <button onclick="closeContactModal()" class="absolute top-4 left-4 text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">طلب تواصل مع الناقل</h2>
+            
+            <div id="modalShipmentInfo" class="bg-gray-50 p-4 rounded-lg mb-6"></div>
+            <div id="modalTripInfo" class="bg-blue-50 p-4 rounded-lg mb-6"></div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">رسالتك للناقل</label>
+                <textarea id="contactMessage" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" placeholder="اكتب رسالتك هنا..."></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="sendContactRequest()" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                    <i class="fas fa-paper-plane ml-2"></i>
+                    إرسال الطلب
+                </button>
+                <button onclick="closeContactModal()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allMatches = [];
+        let currentMatch = null;
+        let userShipments = [];
+
+        // تحميل البيانات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', async () => {
+            // تهيئة المطابق إذا لم يكن موجوداً
+            if (!window.fastShipMatcher) {
+                window.fastShipMatcher = new FastShipMatcherV2();
+            }
+            
+            // تهيئة session manager أولاً
+            if (window.sessionManager) {
+                await window.sessionManager.init();
+                
+                if (!window.sessionManager.isLoggedIn()) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const userType = window.sessionManager.getUserType();
+                if (userType !== 'shipper') {
+                    alert('هذه الصفحة مخصصة للشاحنين فقط');
+                    window.sessionManager.goToDashboard();
+                    return;
+                }
+                
+                // تهيئة الأنظمة المحسنة
+                const user = window.sessionManager.getCurrentUser();
+                if (window.enhancedNotifications) {
+                    await window.enhancedNotifications.init(user);
+                }
+                if (window.enhancedMessaging) {
+                    await window.enhancedMessaging.init(user);
+                }
+                
+                await loadUserShipments();
+                await loadMatches();
+            }
+        });
+
+        // تحميل شحنات المستخدم
+        async function loadUserShipments() {
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const shipperId = await window.sessionManager.ensureShipperRecord();
+                if (!shipperId) {
+                    console.warn('تعذر تحديد معرف الشاحن.');
+                    return;
+                }
+
+                const { data: shipments } = await window.supabaseClient
+                    .from('shipments')
+                    .select('*')
+                    .eq('shipper_id', shipperId)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false });
+
+                userShipments = shipments || [];
+                
+                // ملء قائمة الشحنات في الفلتر
+                const shipmentFilter = document.getElementById('shipmentFilter');
+                if (shipmentFilter) {
+                    shipmentFilter.innerHTML = '<option value="">كل الشحنات</option>';
+                }
+
+                (shipments || []).forEach(shipment => {
+                    const option = document.createElement('option');
+                    option.value = shipment.id;
+                    option.textContent = `${shipment.title} - ${shipment.pickup_location} → ${shipment.delivery_location}`;
+                    shipmentFilter?.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('خطأ في تحميل الشحنات:', error);
+            }
+        }
+
+        // تحميل المطابقات
+        async function loadMatches() {
+            try {
+                document.getElementById('loadingState').classList.remove('hidden');
+                document.getElementById('matchesContainer').innerHTML = '';
+                document.getElementById('emptyState').classList.add('hidden');
+
+                const user = window.sessionManager.getCurrentUser();
+                console.log('👤 المستخدم الحالي:', user);
+
+                const shipperId = await window.sessionManager.ensureShipperRecord();
+                if (!shipperId) {
+                    console.warn('تعذر تحديد معرف الشاحن.');
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    return;
+                }
+
+                console.log('🚚 معرف الشاحن:', shipperId);
+                console.log('📦 عدد الشحنات:', userShipments.length);
+                
+                if (!userShipments || userShipments.length === 0) {
+                    console.log('❌ لا توجد شحنات للمستخدم');
+                    document.getElementById('loadingState').classList.add('hidden');
+                    document.getElementById('emptyState').classList.remove('hidden');
+                    return;
+                }
+
+                let allMatchedTrips = [];
+                
+                // البحث عن الرحلات المتطابقة لكل شحنة
+                for (const shipment of userShipments) {
+                    console.log('البحث عن رحلات مطابقة للشحنة:', shipment.title, 'من', shipment.pickup_location, 'إلى', shipment.delivery_location);
+                    
+                    // البحث عن جميع الرحلات النشطة
+                    console.log('🔄 محاولة تحميل الرحلات بالطريقة الجديدة...');
+
+                    try {
+                        // محاولة الطريقة الجديدة أولاً
+                        const { data: tripsData, error: tripsError } = await window.supabaseClient
+                            .from('trips')
+                            .select(`
+                                *,
+                                carriers (
+                                    id,
+                                    user_id,
+                                    vehicle_type,
+                                    rating,
+                                    total_trips
+                                )
+                            `)
+                            .in('status', ['active', 'pending']);
+
+                        if (tripsError) throw tripsError;
+
+                        console.log('تم العثور على', tripsData?.length || 0, 'رحلة نشطة أو معلقة إجمالاً');
+
+                        // جلب بيانات المستخدمين للناقلين بشكل منفصل
+                        const tripsWithUsers = [];
+                        if (tripsData && tripsData.length > 0) {
+                            for (const trip of tripsData) {
+                                try {
+                                    if (trip.carriers?.user_id) {
+                                        const { data: userData } = await window.supabaseClient
+                                            .from('users')
+                                            .select('id, full_name, phone')
+                                            .eq('id', trip.carriers.user_id)
+                                            .single();
+
+                                        tripsWithUsers.push({
+                                            ...trip,
+                                            carriers: {
+                                                ...trip.carriers,
+                                                users: userData || { full_name: 'ناقل غير محدد', phone: '' }
+                                            }
+                                        });
+                                    } else {
+                                        tripsWithUsers.push({
+                                            ...trip,
+                                            carriers: {
+                                                ...trip.carriers,
+                                                users: { full_name: 'ناقل غير محدد', phone: '' }
+                                            }
+                                        });
+                                    }
+                                } catch (userError) {
+                                    console.warn('⚠️ خطأ في جلب بيانات الناقل للرحلة:', trip.id, userError);
+                                    tripsWithUsers.push({
+                                        ...trip,
+                                        carriers: {
+                                            ...trip.carriers,
+                                            users: { full_name: 'ناقل غير محدد', phone: '' }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+
+                        // حساب درجة المطابقة لكل رحلة
+                        if (tripsWithUsers && tripsWithUsers.length > 0) {
+                            for (const trip of tripsWithUsers) {
+                                const matchScore = calculateMatchScore(shipment, trip);
+
+                                // إضافة الرحلة إذا كانت درجة المطابقة جيدة
+                                if (matchScore >= 0) {
+                                    allMatchedTrips.push({
+                                        shipment: shipment,
+                                        trip: trip,
+                                        matchScore: matchScore,
+                                        matchReasons: getMatchReasons(shipment, trip)
+                                    });
+                                }
+                            }
+                        }
+
+                    } catch (newMethodError) {
+                        console.warn('⚠️ فشلت الطريقة الجديدة للرحلات، جاري المحاولة بالطريقة القديمة:', newMethodError);
+
+                        // العودة للطريقة القديمة كخيار احتياطي
+                        try {
+                            const { data: fallbackTrips, error: fallbackError } = await window.supabaseClient
+                                .from('trips')
+                                .select(`
+                                    *,
+                                    carriers (
+                                        id,
+                                        user_id,
+                                        vehicle_type,
+                                        rating,
+                                        total_trips,
+                                        users (
+                                            id,
+                                            full_name,
+                                            phone
+                                        )
+                                    )
+                                `)
+                                .in('status', ['active', 'pending']);
+
+                            if (fallbackError) throw fallbackError;
+
+                            console.log('✅ تم تحميل الرحلات بالطريقة القديمة:', fallbackTrips?.length || 0);
+
+                            // حساب درجة المطابقة لكل رحلة
+                            if (fallbackTrips && fallbackTrips.length > 0) {
+                                for (const trip of fallbackTrips) {
+                                    const matchScore = calculateMatchScore(shipment, trip);
+
+                                    // إضافة الرحلة إذا كانت درجة المطابقة جيدة
+                                    if (matchScore >= 0) {
+                                        allMatchedTrips.push({
+                                            shipment: shipment,
+                                            trip: trip,
+                                            matchScore: matchScore,
+                                            matchReasons: getMatchReasons(shipment, trip)
+                                        });
+                                    }
+                                }
+                            }
+
+                        } catch (fallbackError) {
+                            console.error('❌ فشلت الطريقة القديمة للرحلات أيضاً:', fallbackError);
+                        }
+                    }
+                }
+
+                // ترتيب النتائج حسب درجة المطابقة
+                allMatchedTrips.sort((a, b) => b.matchScore - a.matchScore);
+                
+                console.log('إجمالي الرحلات المتطابقة:', allMatchedTrips.length);
+
+                // تحديث المتغير العام
+                allMatches = allMatchedTrips;
+
+                document.getElementById('loadingState').classList.add('hidden');
+                
+                if (allMatchedTrips.length === 0) {
+                    document.getElementById('emptyState').classList.remove('hidden');
+                } else {
+                    displayMatches(allMatchedTrips);
+                    updateStats(allMatchedTrips);
+                }
+
+            } catch (error) {
+                console.error('خطأ في تحميل المطابقات:', error);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
+            }
+        }
+
+        // عرض المطابقات
+        function displayMatches(matches) {
+            const container = document.getElementById('matchesContainer');
+            container.innerHTML = '';
+
+            matches.forEach(match => {
+                const card = createMatchCard(match);
+                container.appendChild(card);
+            });
+        }
+
+        // إنشاء بطاقة مطابقة
+        function createMatchCard(match) {
+            const div = document.createElement('div');
+            div.className = 'glass-card p-6 mb-4';
+            
+            const score = match.matchScore;
+            const scoreClass = score >= 80 ? 'score-excellent' : score >= 60 ? 'score-good' : score >= 40 ? 'score-fair' : 'score-poor';
+            
+            const rating = match.trip?.carriers?.rating || 5.0;
+            const starsHtml = Array.from({length: 5}, (_, i) => 
+                `<i class="fas fa-star ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}"></i>`
+            ).join('');
+
+            div.innerHTML = `
+                <div class="flex flex-col lg:flex-row gap-6">
+                    <!-- Match Score -->
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="match-score relative">
+                            <svg class="w-full h-full" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="8"/>
+                                <circle class="match-score-circle ${scoreClass}" cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="8" 
+                                    stroke-dasharray="${2 * Math.PI * 45}" 
+                                    stroke-dashoffset="${2 * Math.PI * 45 * (1 - score / 100)}"
+                                    stroke-linecap="round"/>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                <span class="text-2xl font-bold ${scoreClass}">${score}%</span>
+                                <span class="text-xs text-gray-500">توافق</span>
+                            </div>
+                        </div>
+                        <span class="badge badge-new mt-3">جديد</span>
+                    </div>
+
+                    <!-- Shipment Info -->
+                    <div class="flex-1 border-r-2 border-gray-200 pr-6">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">${match.shipment?.title}</h3>
+                                <p class="text-sm text-gray-600">شحنتك</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-green-600"></i>
+                                <span class="font-medium">من:</span>
+                                <span class="text-gray-600">${match.shipment?.pickup_location}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-red-600"></i>
+                                <span class="font-medium">إلى:</span>
+                                <span class="text-gray-600">${match.shipment?.delivery_location}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-weight-hanging text-blue-600"></i>
+                                <span class="font-medium">الوزن:</span>
+                                <span class="text-gray-600">${match.shipment?.weight} كجم</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-calendar text-purple-600"></i>
+                                <span class="font-medium">التاريخ المفضل:</span>
+                                <span class="text-gray-600">${new Date(match.shipment?.preferred_date).toLocaleDateString('ar-SA')}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trip Info -->
+                    <div class="flex-1">
+                        <div class="flex items-start justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-800">${match.trip?.carriers?.users?.full_name || 'ناقل غير محدد'}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                    ${starsHtml}
+                                    <span class="text-sm text-gray-600">(${match.trip?.carriers?.total_trips || 0} رحلة)</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm mb-4">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-route text-green-600"></i>
+                                <span class="font-medium">من:</span>
+                                <span class="text-gray-600">${match.trip?.origin}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-flag-checkered text-red-600"></i>
+                                <span class="font-medium">إلى:</span>
+                                <span class="text-gray-600">${match.trip?.destination}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-truck text-blue-600"></i>
+                                <span class="font-medium">نوع المركبة:</span>
+                                <span class="text-gray-600">${getVehicleTypeArabic(match.trip?.vehicle_type)}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-box text-orange-600"></i>
+                                <span class="font-medium">السعة المتاحة:</span>
+                                <span class="text-gray-600">${match.trip?.capacity} كجم</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-calendar-day text-purple-600"></i>
+                                <span class="font-medium">تاريخ الرحلة:</span>
+                                <span class="text-gray-600">${new Date(match.trip?.travel_date).toLocaleDateString('ar-SA')}</span>
+                            </div>
+                            ${match.trip?.price_per_kg ? `
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-money-bill-wave text-green-600"></i>
+                                <span class="font-medium">السعر:</span>
+                                <span class="text-gray-600">${match.trip.price_per_kg} ريال/كجم</span>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Match Reasons -->
+                        ${match.matchReasons && match.matchReasons.length > 0 ? `
+                        <div class="bg-blue-50 p-3 rounded-lg mb-4">
+                            <p class="text-sm font-medium text-blue-800 mb-2">أسباب المطابقة:</p>
+                            <div class="flex flex-wrap gap-2">
+                                ${match.matchReasons.map(reason => `
+                                    <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs">
+                                        <i class="fas fa-check-circle mr-1"></i>${reason}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Actions -->
+                        <div class="flex gap-3">
+                            <button onclick="openContactModal('${match.shipment.id}', '${match.trip.id}')" class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-purple-700 hover:to-indigo-700 transition">
+                                <i class="fas fa-comments ml-2"></i>
+                                طلب تواصل
+                            </button>
+                            <button onclick="openChat('${match.shipment?.id}', '${match.trip?.carriers?.users?.full_name || 'الناقل'}', '${match.trip?.carriers?.users?.id || ''}')" 
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                                <i class="fas fa-comment-dots ml-2"></i>
+                                دردشة
+                            </button>
+                            ${match.trip?.carriers?.users?.phone ? `
+                            <a href="https://wa.me/${match.trip.carriers.users.phone.replace(/[^0-9]/g, '')}" target="_blank" 
+                               class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition flex items-center justify-center">
+                                <i class="fab fa-whatsapp text-xl"></i>
+                            </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        // تحديث الإحصائيات
+        function updateStats(matches) {
+            document.getElementById('totalMatches').textContent = matches.length;
+            document.getElementById('excellentMatches').textContent = matches.filter(m => m.matchScore >= 80).length;
+            document.getElementById('newMatches').textContent = matches.length; // كلها جديدة في البحث المباشر
+            document.getElementById('contactedMatches').textContent = '0'; // لا توجد بيانات سابقة
+        }
+
+        // تطبيق الفلاتر
+        function applyFilters() {
+            const shipmentId = document.getElementById('shipmentFilter').value;
+            const minScore = parseInt(document.getElementById('scoreFilter').value);
+            const status = document.getElementById('statusFilter').value;
+
+            let filtered = [...allMatches];
+
+            if (shipmentId) {
+                filtered = filtered.filter(m => m.shipment.id === shipmentId);
+            }
+
+            if (minScore > 0) {
+                filtered = filtered.filter(m => m.matchScore >= minScore);
+            }
+
+            // في البحث المباشر، كل المطابقات جديدة
+            if (status && status !== '') {
+                // لا نحتاج لفلترة الحالة في البحث المباشر
+            }
+
+            displayMatches(filtered);
+            updateStats(filtered);
+        }
+
+        // تحديث المطابقات
+        async function refreshMatches() {
+            const btn = document.getElementById('refreshBtn');
+            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> جاري التحديث...';
+            btn.disabled = true;
+
+            await loadMatches();
+
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> تحديث';
+            btn.disabled = false;
+        }
+
+        // فتح نافذة طلب التواصل
+        async function openContactModal(shipmentId, tripId) {
+            // العثور على المطابقة المحددة
+            const match = allMatches.find(m => m.shipment.id === shipmentId && m.trip.id === tripId);
+            if (!match) return;
+
+            currentMatch = match;
+
+            document.getElementById('modalShipmentInfo').innerHTML = `
+                <h4 class="font-bold mb-2">شحنتك:</h4>
+                <p class="text-sm">${match.shipment.title}</p>
+                <p class="text-sm text-gray-600">${match.shipment.pickup_location} → ${match.shipment.delivery_location}</p>
+            `;
+
+            document.getElementById('modalTripInfo').innerHTML = `
+                <h4 class="font-bold mb-2">رحلة الناقل:</h4>
+                <p class="text-sm">${match.trip?.carriers?.users?.full_name || 'ناقل غير محدد'}</p>
+                <p class="text-sm text-gray-600">${match.trip?.origin || ''} → ${match.trip?.destination || ''}</p>
+            `;
+
+            document.getElementById('contactMessage').value = `مرحباً، أنا مهتم بنقل شحنتي معك. يمكننا مناقشة التفاصيل؟`;
+
+            document.getElementById('contactModal').classList.remove('hidden');
+        }
+
+        // إغلاق نافذة طلب التواصل
+        function closeContactModal() {
+            document.getElementById('contactModal').classList.add('hidden');
+            currentMatch = null;
+        }
+
+        // إرسال طلب التواصل
+        async function sendContactRequest() {
+            if (!currentMatch) return;
+
+            const messageBody = document.getElementById('contactMessage').value;
+            if (!messageBody.trim()) {
+                alert('الرجاء كتابة رسالة');
+                return;
+            }
+
+            try {
+                const user = window.sessionManager.getCurrentUser();
+                if (!user?.profile?.id) {
+                    throw new Error('تعذر تحديد معرف المستخدم الداخلي');
+                }
+
+                const shipperId = await window.sessionManager.ensureShipperRecord();
+                if (!shipperId) {
+                    throw new Error('تعذر تحديد حساب الشاحن');
+                }
+
+                const carrierUserId = currentMatch?.trip?.carriers?.users?.id || currentMatch?.trip?.carriers?.user_id;
+                if (!carrierUserId) {
+                    throw new Error('تعذر تحديد معرف الناقل الداخلي');
+                }
+
+                // إنشاء رسالة في جدول الرسائل
+                const messagePayload = {
+                    sender_id: user.profile.id,
+                    receiver_id: carrierUserId,
+                    subject: `طلب نقل شحنة: ${currentMatch.shipment.title}`,
+                    content: messageBody,
+                    message_type: 'contact_request',
+                    folder: 'inbox'
+                };
+
+                const { error: messageError } = await window.supabaseClient
+                    .from('messages')
+                    .insert(messagePayload);
+
+                if (messageError) {
+                    console.error('فشل إرسال رسالة طلب التواصل:', messageError);
+                    alert('تعذر إرسال الرسالة إلى الناقل. الرجاء المحاولة لاحقاً.');
+                    return;
+                }
+
+                // أيضاً إنشاء contact_request للتتبع
+                const { error: contactError } = await window.supabaseClient
+                    .from('contact_requests')
+                    .insert({
+                        shipper_id: shipperId,
+                        carrier_id: currentMatch.trip.carrier_id,
+                        shipment_id: currentMatch.shipment.id,
+                        trip_id: currentMatch.trip.id,
+                        message: messageBody
+                    });
+
+                if (contactError) {
+                    console.error('فشل إنشاء سجل طلب التواصل:', contactError);
+                    alert('تعذر حفظ طلب التواصل حالياً. حاول مرة أخرى لاحقاً.');
+                    return;
+                }
+
+                // إرسال إشعار للناقل
+                // التريجر في قاعدة البيانات يتولى إنشاء إشعار للناقل عبر send_message_notification
+
+                alert('✅ تم إرسال طلب التواصل بنجاح!');
+                closeContactModal();
+                await loadMatches();
+
+            } catch (error) {
+                console.error('خطأ في إرسال الطلب:', error);
+                alert('حدث خطأ في إرسال الطلب');
+            }
+        }
+
+        // دالة مساعدة لترجمة نوع المركبة
+        function getVehicleTypeArabic(type) {
+            const types = {
+                'car': 'سيارة',
+                'pickup': 'بيك أب',
+                'van': 'فان',
+                'truck': 'شاحنة',
+                'individual': 'مسافر فردي',
+                'fleet': 'أسطول',
+                'any': 'أي نوع'
+            };
+            return types[type] || type;
+        }
+
+        // فتح دردشة مباشرة مع الناقل
+        function openChat(shipmentId, carrierName, carrierUserId) {
+            if (!carrierUserId) {
+                alert('معرف الناقل غير متوفر');
+                return;
+            }
+            
+            // التوجه لصفحة الرسائل مع فتح محادثة جديدة
+            window.location.href = `messages.html?newChat=true&shipmentId=${shipmentId}&carrierName=${encodeURIComponent(carrierName)}&carrierUserId=${carrierUserId}`;
+        }
+
+        // دالة مساعدة لاستخراج اسم المدينة
+        function extractCity(location) {
+            if (!location) return '';
+            const parts = location.split(',');
+            return parts.length > 1 ? parts[1].trim() : parts[0].trim();
+        }
+
+        // دالة مساعدة لاستخراج اسم الدولة
+        function extractCountry(location) {
+            if (!location) return '';
+            const parts = location.split(',');
+            return parts[0].trim();
+        }
+
+        // دالة حساب درجة المطابقة
+        function calculateMatchScore(shipment, trip) {
+            let score = 0;
+            
+            // تطابق المدن (60 نقطة)
+            const tripOrigin = extractCity(trip.origin).toLowerCase();
+            const tripDestination = extractCity(trip.destination).toLowerCase();
+            const shipmentOrigin = extractCity(shipment.pickup_location).toLowerCase();
+            const shipmentDestination = extractCity(shipment.delivery_location).toLowerCase();
+            
+            console.log('مقارنة المدن:', {
+                tripOrigin, tripDestination, shipmentOrigin, shipmentDestination
+            });
+            
+            if (tripOrigin.includes(shipmentOrigin) || shipmentOrigin.includes(tripOrigin)) {
+                score += 30;
+                console.log('تطابق في نقطة البداية');
+            }
+            if (tripDestination.includes(shipmentDestination) || shipmentDestination.includes(tripDestination)) {
+                score += 30;
+                console.log('تطابق في نقطة النهاية');
+            }
+            
+            console.log('الدرجة الحالية:', score);
+            
+            // تطابق نوع الناقل (10 نقاط)
+            if (trip.vehicle_type && shipment.vehicle_type_preferred) {
+                if (trip.vehicle_type === shipment.vehicle_type_preferred || 
+                    trip.vehicle_type === 'any' || 
+                    shipment.vehicle_type_preferred === 'any') {
+                    score += 10;
+                    console.log('تطابق في نوع الناقل');
+                }
+            }
+            
+            // تطابق التاريخ (10 نقاط)
+            if (trip.travel_date && shipment.preferred_date) {
+                const tripDate = new Date(trip.travel_date);
+                const shipmentDate = new Date(shipment.preferred_date);
+                const daysDiff = Math.abs((tripDate - shipmentDate) / (1000 * 60 * 60 * 24));
+                
+                console.log('مقارنة التاريخ:', { tripDate: tripDate.toISOString(), shipmentDate: shipmentDate.toISOString(), daysDiff });
+                
+                if (daysDiff <= 1) score += 10;
+                else if (daysDiff <= 3) score += 7;
+                else if (daysDiff <= 7) score += 5;
+            }
+            
+            console.log('الدرجة النهائية:', score);
+            return score;
+        }
+
+        // دالة الحصول على أسباب المطابقة
+        function getMatchReasons(shipment, trip) {
+            const reasons = [];
+
+            const pickupMatch = extractCity(shipment.pickup_location).toLowerCase().includes(extractCity(trip.origin).toLowerCase()) ||
+                               extractCity(trip.origin).toLowerCase().includes(extractCity(shipment.pickup_location).toLowerCase());
+            const deliveryMatch = extractCity(shipment.delivery_location).toLowerCase().includes(extractCity(trip.destination).toLowerCase()) ||
+                                 extractCity(trip.destination).toLowerCase().includes(extractCity(shipment.delivery_location).toLowerCase());
+
+            if (pickupMatch) reasons.push('موقع الاستلام متطابق');
+            if (deliveryMatch) reasons.push('موقع التسليم متطابق');
+
+            const shipmentWeight = parseFloat(shipment.weight);
+            const capacity = parseFloat(trip.capacity);
+            if (shipmentWeight <= capacity) reasons.push('السعة كافية');
+
+            if (trip.travel_date && shipment.preferred_date) {
+                const tripDate = new Date(trip.travel_date);
+                const shipmentDate = new Date(shipment.preferred_date);
+                const daysDiff = Math.abs((tripDate - shipmentDate) / (1000 * 60 * 60 * 24));
+                if (daysDiff <= 1) reasons.push('التاريخ متطابق');
+            }
+
+            if (shipment.shippers?.rating >= 4.5) reasons.push('شاحن موثوق');
+
+            return reasons;
+        }
+    </script>
+</body>
+</html>
